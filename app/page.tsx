@@ -1,21 +1,49 @@
 import Link from "next/link";
 import { getAllPosts } from "@/lib/posts";
+import { generateHomepageFAQSchema } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Home",
+  title: "GEO Optimized Blog | Generative AI Engine Optimization Guides",
   description: "Discover articles about Generative AI Engine Optimization (GEO), SEO, and AI discovery strategies.",
   alternates: {
     canonical: "/",
+  },
+  openGraph: {
+    title: "GEO Optimized Blog | Generative AI Engine Optimization Guides",
+    description: "Discover articles about Generative AI Engine Optimization (GEO), SEO, and AI discovery strategies.",
+    type: "website",
+    url: "/",
+    images: [
+      {
+        url: "/images/featured-og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "GEO Optimized Blog - AI Engine Optimization",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GEO Optimized Blog | Generative AI Engine Optimization Guides",
+    description: "Discover articles about Generative AI Engine Optimization (GEO), SEO, and AI discovery strategies.",
+    images: ["/images/featured-twitter.jpg"],
   },
 };
 
 export default function HomePage() {
   const posts = getAllPosts();
   const latestPosts = posts.slice(0, 5);
+  const faqSchema = generateHomepageFAQSchema();
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
+    <>
+      {/* FAQPage JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+      />
+      <div className="max-w-4xl mx-auto px-4 py-12">
       <section className="mb-12">
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
           Welcome to the GEO Optimized Blog
@@ -107,7 +135,7 @@ export default function HomePage() {
           <div>
             <dt className="font-semibold text-gray-900 text-lg mb-2">What is this blog about?</dt>
             <dd className="leading-relaxed">
-              Generative AI Engine Optimization (GEO) — helping products become discoverable by AI assistants like ChatGPT, Claude, and Gemini. Learn how to structure your content, implement semantic HTML, use structured data, and optimize for AI crawlers.
+              Generative AI Engine Optimization (GEO) — helping products become discoverable by AI assistants like ChatGPT, Claude, and Gemini. Learn how to structure your content, implement semantic HTML, use structured data, and optimize for AI crawlers. Learn more about structured data at <a href="https://schema.org" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Schema.org</a>.
             </dd>
           </div>
           <div>
@@ -119,12 +147,13 @@ export default function HomePage() {
           <div>
             <dt className="font-semibold text-gray-900 text-lg mb-2">What will I learn?</dt>
             <dd className="leading-relaxed">
-              Practical guides on semantic HTML, structured data (JSON-LD), AI-friendly content architecture, robots.txt configuration for AI crawlers, and strategies for making your product maximally discoverable by LLMs.
+              Practical guides on semantic HTML, structured data (JSON-LD), AI-friendly content architecture, robots.txt configuration for AI crawlers, and strategies for making your product maximally discoverable by LLMs. Explore authoritative resources like the <a href="https://developers.google.com/search/docs/appearance/structured-data" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 underline">Google Search Central documentation</a> for structured data best practices.
             </dd>
           </div>
         </dl>
       </section>
-    </div>
+      </div>
+    </>
   );
 }
 

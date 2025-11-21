@@ -6,7 +6,11 @@ import {
   generateBlogPostingSchema,
   generateFAQSchema,
   generateBreadcrumbListSchema,
+  generateHowToSchema,
+  generateWebPageSchema,
+  type HowToStep,
 } from "@/lib/structured-data";
+import { calculateReadingTime } from "@/lib/reading-time";
 import type { Metadata } from "next";
 
 interface PageProps {
@@ -84,12 +88,69 @@ export default function BlogPostPage({ params }: PageProps) {
   const { metadata, content } = post;
   const htmlContent = markdownToHtml(content);
   const relatedPosts = getRelatedPosts(params.slug);
+  
+  // Calculate reading time
+  const readingTimeMinutes = calculateReadingTime(content);
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
+  const postUrl = `${siteUrl}/blog/${metadata.slug}`;
 
   // Generate JSON-LD schemas
-  const blogPostingSchema = generateBlogPostingSchema(metadata);
+  const blogPostingSchema = generateBlogPostingSchema(metadata, readingTimeMinutes);
   const breadcrumbSchema = generateBreadcrumbListSchema(metadata);
   const faqSchema = metadata.faq && metadata.faq.length > 0 
     ? generateFAQSchema(metadata.faq) 
+    : null;
+  
+  // Generate WebPage schema with speakable property
+  const webPageSchema = generateWebPageSchema(metadata);
+  
+  // Generate HowTo schema if content contains step-by-step instructions
+  // Extract steps from markdown content (looking for ### Step X: pattern)
+  const howToSteps: HowToStep[] = [];
+  const stepPattern = /^###\s+Step\s+(\d+)[:\s]+(.+)$/gim;
+  const stepMatches = [...content.matchAll(stepPattern)];
+  
+  if (stepMatches.length >= 2) {
+    stepMatches.forEach((match, index) => {
+      const stepNumber = parseInt(match[1], 10);
+      const stepTitle = match[2].trim();
+      
+      // Extract step content (text between this heading and next heading or end)
+      const stepStartIndex = match.index! + match[0].length;
+      const nextStepIndex = index < stepMatches.length - 1 
+        ? stepMatches[index + 1].index!
+        : content.length;
+      
+      let stepText = content.substring(stepStartIndex, nextStepIndex)
+        .replace(/^###.*$/gm, '') // Remove any nested headings
+        .replace(/```[\s\S]*?```/g, '') // Remove code blocks
+        .replace(/`[^`]+`/g, '') // Remove inline code
+        .trim();
+      
+      // Clean up and limit length
+      stepText = stepText.split('\n\n')[0] // Take first paragraph
+        .replace(/\n/g, ' ')
+        .replace(/\s+/g, ' ')
+        .substring(0, 500)
+        .trim();
+      
+      if (stepText && stepText.length > 20) {
+        howToSteps.push({
+          name: stepTitle,
+          text: stepText,
+          url: `${postUrl}#step-${stepNumber}`,
+        });
+      }
+    });
+  }
+  
+  const howToSchema = howToSteps.length >= 2
+    ? generateHowToSchema(
+        howToSteps,
+        `How to Implement ${metadata.title}`,
+        metadata.description,
+        siteUrl
+      )
     : null;
 
   return (
@@ -107,6 +168,16 @@ export default function BlogPostPage({ params }: PageProps) {
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
+      />
+      {howToSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
         />
       )}
 
@@ -148,7 +219,7 @@ export default function BlogPostPage({ params }: PageProps) {
             {metadata.definition || metadata.description}
           </p>
 
-          <div className="flex items-center gap-4 text-gray-600 border-t border-b border-gray-200 py-4">
+          <div className="flex items-center gap-4 text-gray-600 border-t border-b border-gray-200 py-4 flex-wrap">
             <div itemProp="author" itemScope itemType="https://schema.org/Person">
               <span className="font-medium">
                 By{" "}
@@ -183,6 +254,10 @@ export default function BlogPostPage({ params }: PageProps) {
                 </time>
               </>
             )}
+            <span>•</span>
+            <span className="text-gray-600">
+              {readingTimeMinutes} min read
+            </span>
           </div>
 
           {metadata.tags && metadata.tags.length > 0 && (
@@ -220,8 +295,8 @@ export default function BlogPostPage({ params }: PageProps) {
 
         {/* FAQ Section */}
         {metadata.faq && metadata.faq.length > 0 && (
-          <section className="mb-12 bg-gray-50 rounded-lg p-8">
-            <h2 className="text-3xl font-semibold text-gray-900 mb-6">
+          <section className="mb-12 bg-gray-50 rounded-lg p-8" role="complementary" aria-labelledby="faq-heading">
+            <h2 id="faq-heading" className="text-3xl font-semibold text-gray-900 mb-6">
               Frequently Asked Questions
             </h2>
             <div className="space-y-6">
@@ -256,8 +331,8 @@ export default function BlogPostPage({ params }: PageProps) {
 
         {/* Related Posts */}
         {relatedPosts.length > 0 && (
-          <section className="border-t border-gray-200 pt-8">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Related Articles</h2>
+          <section className="border-t border-gray-200 pt-8" role="complementary" aria-labelledby="related-heading">
+            <h2 id="related-heading" className="text-2xl font-semibold text-gray-900 mb-6">Related Articles</h2>
             <ul className="space-y-4" role="list">
               {relatedPosts.map((relatedPost) => (
                 <li key={relatedPost.metadata.slug}>

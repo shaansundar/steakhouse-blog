@@ -7,12 +7,15 @@ const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`; // Default OpenGraph image
 /**
  * Generate JSON-LD for a blog post
  */
-export function generateBlogPostingSchema(metadata: PostMetadata) {
+export function generateBlogPostingSchema(
+  metadata: PostMetadata,
+  readingTimeMinutes?: number
+) {
   const imageUrl = metadata.image 
     ? (metadata.image.startsWith('http') ? metadata.image : `${SITE_URL}${metadata.image}`)
     : DEFAULT_OG_IMAGE;
 
-  return {
+  const schema: any = {
     '@context': 'https://schema.org',
     '@type': ['BlogPosting', 'Article'],
     headline: metadata.title,
@@ -42,6 +45,13 @@ export function generateBlogPostingSchema(metadata: PostMetadata) {
       height: 630,
     },
   };
+
+  // Add reading time if provided (ISO 8601 duration format)
+  if (readingTimeMinutes) {
+    schema.timeRequired = `PT${readingTimeMinutes}M`;
+  }
+
+  return schema;
 }
 
 /**
@@ -131,6 +141,99 @@ export function generateBreadcrumbListSchema(metadata: PostMetadata) {
         item: `${SITE_URL}/blog/${metadata.slug}`,
       },
     ],
+  };
+}
+
+/**
+ * Generate JSON-LD FAQPage schema for homepage FAQ section
+ */
+export function generateHomepageFAQSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'What is this blog about?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Generative AI Engine Optimization (GEO) — helping products become discoverable by AI assistants like ChatGPT, Claude, and Gemini. Learn how to structure your content, implement semantic HTML, use structured data, and optimize for AI crawlers.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Who is it for?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Founders, marketers, and developers who want AI models to correctly understand and recommend their products. If you\'re building a product that should be discoverable through conversational AI interfaces, this blog is for you.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What will I learn?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Practical guides on semantic HTML, structured data (JSON-LD), AI-friendly content architecture, robots.txt configuration for AI crawlers, and strategies for making your product maximally discoverable by LLMs.',
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Generate JSON-LD HowTo schema for step-by-step guides
+ */
+export interface HowToStep {
+  name: string;
+  text: string;
+  url?: string;
+}
+
+export function generateHowToSchema(
+  steps: HowToStep[],
+  name: string,
+  description: string,
+  baseUrl: string = SITE_URL
+) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    name,
+    description,
+    step: steps.map((step, index) => ({
+      '@type': 'HowToStep',
+      position: index + 1,
+      name: step.name,
+      text: step.text,
+      ...(step.url && { url: step.url }),
+    })),
+  };
+}
+
+/**
+ * Generate JSON-LD WebPage schema with speakable property
+ */
+export function generateWebPageSchema(
+  metadata: PostMetadata,
+  speakableSelectors: string[] = ['#tldr', '.prose', '[aria-labelledby="faq-heading"]']
+) {
+  const url = `${SITE_URL}/blog/${metadata.slug}`;
+  
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': url,
+    url,
+    name: metadata.title,
+    description: metadata.description,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: speakableSelectors,
+    },
+    isPartOf: {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}#website`,
+    },
   };
 }
 

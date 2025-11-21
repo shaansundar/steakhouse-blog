@@ -1,14 +1,34 @@
+import { addExternalLinks } from './external-links';
+
 /**
  * Simple markdown to HTML converter for blog posts
  * This is a basic implementation. For production, consider using a library like remark or marked.
  */
-export function markdownToHtml(markdown: string): string {
+export function markdownToHtml(markdown: string, addCitations: boolean = true): string {
   let html = markdown;
 
   // Headers
   // Convert # to h2 (since page title is already h1), ## to h3, ### to h4, etc.
-  html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
-  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  // Add IDs to step headings for deep linking
+  let stepCounter = 0;
+  html = html.replace(/^#### (.*$)/gim, (match, text) => {
+    const stepMatch = text.match(/^Step\s+(\d+)[:\s]+(.+)$/i);
+    if (stepMatch) {
+      stepCounter++;
+      const stepId = `step-${stepCounter}`;
+      return `<h4 id="${stepId}">${text}</h4>`;
+    }
+    return `<h4>${text}</h4>`;
+  });
+  html = html.replace(/^### (.*$)/gim, (match, text) => {
+    const stepMatch = text.match(/^Step\s+(\d+)[:\s]+(.+)$/i);
+    if (stepMatch) {
+      stepCounter++;
+      const stepId = `step-${stepCounter}`;
+      return `<h3 id="${stepId}">${text}</h3>`;
+    }
+    return `<h3>${text}</h3>`;
+  });
   html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
   html = html.replace(/^# (.*$)/gim, '<h2>$1</h2>'); // Convert # to h2 to maintain single h1 per page
 
@@ -66,6 +86,11 @@ export function markdownToHtml(markdown: string): string {
       return `<p>${trimmed}</p>`;
     })
     .join('\n');
+
+  // Add external links for citations (if enabled)
+  if (addCitations) {
+    html = addExternalLinks(html);
+  }
 
   return html;
 }

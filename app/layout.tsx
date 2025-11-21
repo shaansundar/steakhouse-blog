@@ -52,8 +52,8 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col">
-        <header className="border-b border-gray-200 bg-white">
-          <nav className="max-w-4xl mx-auto px-4 py-6" aria-label="Main navigation">
+        <header className="border-b border-gray-200 bg-white" role="banner">
+          <nav className="max-w-4xl mx-auto px-4 py-6" aria-label="Main navigation" role="navigation">
             <div className="flex items-center justify-between">
               <Link 
                 href="/" 
@@ -84,11 +84,11 @@ export default function RootLayout({
           </nav>
         </header>
 
-        <main className="flex-grow">
+        <main className="flex-grow" role="main">
           {children}
         </main>
 
-        <footer className="border-t border-gray-200 bg-gray-50 mt-16">
+        <footer className="border-t border-gray-200 bg-gray-50 mt-16" role="contentinfo">
           <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="text-center text-gray-600">
               <p className="mb-2">

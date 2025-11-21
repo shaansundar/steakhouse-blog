@@ -8,6 +8,26 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "/blog",
   },
+  openGraph: {
+    title: "Blog | GEO Optimized Blog",
+    description: "All articles about Generative AI Engine Optimization (GEO), SEO, and AI-powered discovery.",
+    type: "website",
+    url: "/blog",
+    images: [
+      {
+        url: "/images/featured-og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "GEO Optimized Blog - AI Engine Optimization",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog | GEO Optimized Blog",
+    description: "All articles about Generative AI Engine Optimization (GEO), SEO, and AI-powered discovery.",
+    images: ["/images/featured-twitter.jpg"],
+  },
 };
 
 export default function BlogIndexPage() {
