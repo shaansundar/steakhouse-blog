@@ -6,7 +6,7 @@ publishedAt: 2025-01-20T00:00:00.000Z
 updatedAt: 2025-01-20T00:00:00.000Z
 author:
   name: John Doe
-  url: 'https://example.com'
+  url: 'https://steakhouse-test.nimbushq.xyz'
 tags:
   - test
   - example

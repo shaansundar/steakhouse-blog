@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
-import { generateWebsiteSchema, generateOrganizationSchema } from "@/lib/structured-data";
+import { generateWebsiteSchema } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
     template: "%s | GEO Optimized Blog",
   },
   description: "A blog optimized for Generative AI Engine Optimization (GEO) and classic SEO",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com'),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz'),
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -42,7 +42,6 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const websiteSchema = generateWebsiteSchema();
-  const organizationSchema = generateOrganizationSchema();
 
   return (
     <html lang="en">
@@ -50,10 +49,6 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
         />
       </head>
       <body className="min-h-screen flex flex-col">

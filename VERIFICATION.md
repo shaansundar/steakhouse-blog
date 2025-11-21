@@ -81,7 +81,7 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-Sitemap: https://example.com/sitemap.xml
+Sitemap: https://steakhouse-test.nimbushq.xyz/sitemap.xml
 ```
 
 ### 5. Sitemap Verification

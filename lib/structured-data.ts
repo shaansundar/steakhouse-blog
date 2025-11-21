@@ -1,6 +1,6 @@
 import { PostMetadata, FAQ } from './posts';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
 const SITE_NAME = 'GEO Optimized Blog';
 
 /**
@@ -9,7 +9,7 @@ const SITE_NAME = 'GEO Optimized Blog';
 export function generateBlogPostingSchema(metadata: PostMetadata) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'BlogPosting',
+    '@type': ['BlogPosting', 'Article'],
     headline: metadata.title,
     description: metadata.description,
     datePublished: metadata.publishedAt,
@@ -21,6 +21,7 @@ export function generateBlogPostingSchema(metadata: PostMetadata) {
     },
     publisher: {
       '@type': 'Organization',
+      '@id': `${SITE_URL}#organization`,
       name: SITE_NAME,
       url: SITE_URL,
     },
@@ -56,15 +57,25 @@ export function generateFAQSchema(faq: FAQ[]) {
 export function generateWebsiteSchema() {
   return {
     '@context': 'https://schema.org',
-    '@type': 'WebSite',
-    name: SITE_NAME,
-    url: SITE_URL,
-    description: 'A blog optimized for Generative AI Engine Optimization (GEO) and SEO',
-    publisher: {
-      '@type': 'Organization',
-      name: SITE_NAME,
-      url: SITE_URL,
-    },
+    '@graph': [
+      {
+        '@type': 'WebSite',
+        '@id': `${SITE_URL}#website`,
+        url: SITE_URL,
+        name: SITE_NAME,
+        description: 'A blog about Generative AI Engine Optimization (GEO), AI discovery, and making products findable by ChatGPT, Claude, Gemini, and other LLMs.',
+        publisher: {
+          '@id': `${SITE_URL}#organization`,
+        },
+      },
+      {
+        '@type': 'Organization',
+        '@id': `${SITE_URL}#organization`,
+        name: SITE_NAME,
+        url: SITE_URL,
+        description: 'A blog optimized for Generative AI Engine Optimization (GEO) and SEO',
+      },
+    ],
   };
 }
 
@@ -75,14 +86,10 @@ export function generateOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': `${SITE_URL}#organization`,
     name: SITE_NAME,
     url: SITE_URL,
     description: 'A blog optimized for Generative AI Engine Optimization (GEO) and SEO',
-    sameAs: [
-      'https://twitter.com/example',
-      'https://linkedin.com/company/example',
-      'https://github.com/example',
-    ],
   };
 }
 

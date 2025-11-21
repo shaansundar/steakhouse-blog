@@ -6,7 +6,7 @@ publishedAt: "2025-11-20"
 updatedAt: "2025-11-20"
 author:
   name: "Shaan Sundar"
-  url: "https://example.com/about"
+  url: "https://steakhouse-test.nimbushq.xyz/about"
 tags:
   - "Generative AI"
   - "GEO"

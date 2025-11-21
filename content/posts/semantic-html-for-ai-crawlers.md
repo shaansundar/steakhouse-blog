@@ -6,7 +6,7 @@ publishedAt: "2025-11-18"
 updatedAt: "2025-11-18"
 author:
   name: "Shaan Sundar"
-  url: "https://example.com/about"
+  url: "https://steakhouse-test.nimbushq.xyz/about"
 tags:
   - "HTML"
   - "Semantic HTML"

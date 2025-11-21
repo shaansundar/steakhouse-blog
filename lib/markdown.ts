@@ -6,9 +6,11 @@ export function markdownToHtml(markdown: string): string {
   let html = markdown;
 
   // Headers
+  // Convert # to h2 (since page title is already h1), ## to h3, ### to h4, etc.
+  html = html.replace(/^#### (.*$)/gim, '<h4>$1</h4>');
   html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+  html = html.replace(/^# (.*$)/gim, '<h2>$1</h2>'); // Convert # to h2 to maintain single h1 per page
 
   // Bold
   html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');

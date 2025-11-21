@@ -56,7 +56,7 @@ function ensureRequiredFields(data: any, content: string): any {
   if (!data.author) {
     data.author = {
       name: 'Anonymous',
-      url: 'https://example.com',
+      url: 'https://steakhouse-test-nimbushq.xyz.com',
     };
   }
 

@@ -5,6 +5,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Home",
   description: "Discover articles about Generative AI Engine Optimization (GEO), SEO, and AI discovery strategies.",
+  alternates: {
+    canonical: "/",
+  },
 };
 
 export default function HomePage() {
@@ -60,16 +63,18 @@ export default function HomePage() {
                   </p>
 
                   {post.metadata.tags && post.metadata.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <ul className="flex flex-wrap gap-2 mt-2" aria-label="Topics">
                       {post.metadata.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-block bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full"
-                        >
-                          {tag}
-                        </span>
+                        <li key={tag}>
+                          <Link
+                            href={`/tags/${encodeURIComponent(tag.toLowerCase().replace(/\s+/g, '-'))}`}
+                            className="inline-block bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                          >
+                            {tag}
+                          </Link>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </article>
               </li>
@@ -87,6 +92,32 @@ export default function HomePage() {
             </Link>
           </div>
         )}
+      </section>
+
+      <section aria-labelledby="geo-blog-faq" className="mt-12 space-y-4">
+        <h2 id="geo-blog-faq" className="text-3xl font-semibold text-gray-900 mb-6">
+          GEO Blog in 3 Questions
+        </h2>
+        <dl className="space-y-6 text-gray-700">
+          <div>
+            <dt className="font-semibold text-gray-900 text-lg mb-2">What is this blog about?</dt>
+            <dd className="leading-relaxed">
+              Generative AI Engine Optimization (GEO) — helping products become discoverable by AI assistants like ChatGPT, Claude, and Gemini. Learn how to structure your content, implement semantic HTML, use structured data, and optimize for AI crawlers.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-gray-900 text-lg mb-2">Who is it for?</dt>
+            <dd className="leading-relaxed">
+              Founders, marketers, and developers who want AI models to correctly understand and recommend their products. If you&apos;re building a product that should be discoverable through conversational AI interfaces, this blog is for you.
+            </dd>
+          </div>
+          <div>
+            <dt className="font-semibold text-gray-900 text-lg mb-2">What will I learn?</dt>
+            <dd className="leading-relaxed">
+              Practical guides on semantic HTML, structured data (JSON-LD), AI-friendly content architecture, robots.txt configuration for AI crawlers, and strategies for making your product maximally discoverable by LLMs.
+            </dd>
+          </div>
+        </dl>
       </section>
     </div>
   );

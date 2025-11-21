@@ -95,16 +95,29 @@ export default function BlogPostPage({ params }: PageProps) {
         itemScope
         itemType="https://schema.org/BlogPosting"
       >
+        {/* Breadcrumbs */}
+        <nav aria-label="Breadcrumb" className="mb-6 text-sm text-gray-600">
+          <ol className="flex flex-wrap items-center gap-1">
+            <li>
+              <Link href="/" className="hover:text-gray-900 hover:underline transition-colors">
+                Home
+              </Link>
+              <span aria-hidden="true" className="mx-2">/</span>
+            </li>
+            <li>
+              <Link href="/blog" className="hover:text-gray-900 hover:underline transition-colors">
+                Blog
+              </Link>
+              <span aria-hidden="true" className="mx-2">/</span>
+            </li>
+            <li aria-current="page" className="font-medium text-gray-900">
+              {metadata.title}
+            </li>
+          </ol>
+        </nav>
+
         {/* Article Header */}
         <header className="mb-12">
-          <Link
-            href="/blog"
-            className="text-blue-600 hover:text-blue-800 font-medium mb-4 inline-block focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
-            aria-label="Back to blog index"
-          >
-            ← Back to Blog
-          </Link>
-
           <h1 className="text-5xl font-bold text-gray-900 mb-4" itemProp="headline">
             {metadata.title}
           </h1>
@@ -151,18 +164,30 @@ export default function BlogPostPage({ params }: PageProps) {
           </div>
 
           {metadata.tags && metadata.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2 mt-4" itemProp="keywords">
+            <ul className="flex flex-wrap gap-2 mt-4" itemProp="keywords" aria-label="Topics">
               {metadata.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium"
-                >
-                  {tag}
-                </span>
+                <li key={tag}>
+                  <Link
+                    href={`/tags/${encodeURIComponent(tag.toLowerCase().replace(/\s+/g, '-'))}`}
+                    className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium hover:bg-blue-200 transition-colors"
+                  >
+                    {tag}
+                  </Link>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </header>
+
+        {/* TL;DR Section */}
+        <section aria-labelledby="tldr" className="mb-8 rounded-lg border border-gray-200 bg-gray-50 p-6">
+          <h2 id="tldr" className="text-sm font-semibold uppercase tracking-wide text-gray-700 mb-2">
+            TL;DR
+          </h2>
+          <p className="text-sm text-gray-700 leading-relaxed">
+            {(metadata as any).tldr ?? metadata.description}
+          </p>
+        </section>
 
         {/* Main Content */}
         <section

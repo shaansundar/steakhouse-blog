@@ -5,6 +5,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Blog",
   description: "All articles about Generative AI Engine Optimization (GEO), SEO, and AI-powered discovery.",
+  alternates: {
+    canonical: "/blog",
+  },
 };
 
 export default function BlogIndexPage() {
@@ -54,16 +57,18 @@ export default function BlogIndexPage() {
                   </p>
 
                   {post.metadata.tags && post.metadata.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <ul className="flex flex-wrap gap-2 mt-2" aria-label="Topics">
                       {post.metadata.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-block bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full"
-                        >
-                          {tag}
-                        </span>
+                        <li key={tag}>
+                          <Link
+                            href={`/tags/${encodeURIComponent(tag.toLowerCase().replace(/\s+/g, '-'))}`}
+                            className="inline-block bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
+                          >
+                            {tag}
+                          </Link>
+                        </li>
                       ))}
-                    </div>
+                    </ul>
                   )}
                 </article>
               </li>

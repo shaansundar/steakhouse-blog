@@ -6,7 +6,7 @@ publishedAt: "2025-11-19"
 updatedAt: "2025-11-19"
 author:
   name: "Shaan Sundar"
-  url: "https://example.com/about"
+  url: "https://steakhouse-test.nimbushq.xyz/about"
 tags:
   - "Structured Data"
   - "JSON-LD"
@@ -67,14 +67,14 @@ JSON-LD is the easiest way to add structured data to your pages. It's simply a `
   "author": {
     "@type": "Person",
     "name": "Shaan Sundar",
-    "url": "https://example.com/about"
+    "url": "https://steakhouse-test.nimbushq.xyz/about"
   },
   "datePublished": "2025-11-19",
   "dateModified": "2025-11-19",
   "publisher": {
     "@type": "Organization",
     "name": "Your Site Name",
-    "url": "https://example.com"
+    "url": "https://steakhouse-test.nimbushq.xyz"
   }
 }
 ```

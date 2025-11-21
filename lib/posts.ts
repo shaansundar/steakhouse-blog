@@ -128,3 +128,52 @@ export function getRelatedPosts(currentSlug: string, limit: number = 3): Post[] 
   return scoredPosts.map((item) => item.post);
 }
 
+/**
+ * Get all unique tags from all posts
+ */
+export function getAllTags(): string[] {
+  const posts = getAllPosts();
+  const tagSet = new Set<string>();
+  
+  posts.forEach((post) => {
+    post.metadata.tags.forEach((tag) => {
+      tagSet.add(tag.toLowerCase().replace(/\s+/g, '-'));
+    });
+  });
+  
+  return Array.from(tagSet).sort();
+}
+
+/**
+ * Get posts by tag (normalized tag slug)
+ */
+export function getPostsByTag(tagSlug: string): Post[] {
+  const allPosts = getAllPosts();
+  const normalizedTagSlug = tagSlug.toLowerCase().replace(/\s+/g, '-');
+  
+  return allPosts.filter((post) =>
+    post.metadata.tags.some(
+      (tag) => tag.toLowerCase().replace(/\s+/g, '-') === normalizedTagSlug
+    )
+  );
+}
+
+/**
+ * Get tag display name from slug
+ */
+export function getTagDisplayName(tagSlug: string): string | null {
+  const posts = getAllPosts();
+  const normalizedTagSlug = tagSlug.toLowerCase().replace(/\s+/g, '-');
+  
+  for (const post of posts) {
+    const matchingTag = post.metadata.tags.find(
+      (tag) => tag.toLowerCase().replace(/\s+/g, '-') === normalizedTagSlug
+    );
+    if (matchingTag) {
+      return matchingTag;
+    }
+  }
+  
+  return null;
+}
+
