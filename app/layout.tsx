@@ -60,7 +60,7 @@ export default function RootLayout({
                 className="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors"
                 aria-label="Go to homepage"
               >
-                GEO Blog
+                🥩 Steakhouse
               </Link>
               <ul className="flex gap-6" role="list">
                 <li>
