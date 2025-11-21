@@ -17,6 +17,11 @@ export default function BlogIndexPage() {
     <div className="max-w-4xl mx-auto px-4 py-12">
       <header className="mb-12">
         <h1 className="text-5xl font-bold text-gray-900 mb-4">Blog</h1>
+        {/* Explicit definition paragraph for LLMs - appears immediately after h1 */}
+        {/* This helps LLMs extract the core concept quickly */}
+        <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium">
+          A collection of articles about Generative AI Engine Optimization (GEO), covering strategies for making products and content discoverable by AI assistants like ChatGPT, Claude, and Gemini, as well as traditional search engines.
+        </p>
         <p className="text-xl text-gray-700 leading-relaxed">
           All articles about making your products and content discoverable in the age of
           generative AI and traditional search engines.

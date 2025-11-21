@@ -75,6 +75,8 @@ export function getPostBySlug(slug: string): Post | null {
         author: data.author,
         tags: data.tags || [],
         faq: data.faq || [],
+        definition: data.definition,
+        image: data.image,
       },
       content,
     };

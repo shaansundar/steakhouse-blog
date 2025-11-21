@@ -20,6 +20,11 @@ export default function HomePage() {
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
           Welcome to the GEO Optimized Blog
         </h1>
+        {/* Explicit definition paragraph for LLMs - appears immediately after h1 */}
+        {/* This helps LLMs extract the core concept quickly */}
+        <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium">
+          A blog dedicated to Generative AI Engine Optimization (GEO), teaching founders, marketers, and developers how to make their products discoverable by AI assistants like ChatGPT, Claude, and Gemini through semantic HTML, structured data, and AI-friendly content architecture.
+        </p>
         <p className="text-xl text-gray-700 leading-relaxed">
           Explore cutting-edge strategies for making your products and content discoverable
           by generative AI engines like ChatGPT, Claude, and Gemini. Learn how to optimize

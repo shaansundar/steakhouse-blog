@@ -144,22 +144,9 @@ export default function BlogPostPage({ params }: PageProps) {
 
           {/* Explicit definition paragraph for LLMs - appears immediately after h1 */}
           {/* This helps LLMs extract the core concept quickly */}
-          {metadata.definition ? (
-            <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium" itemProp="abstract">
-              {metadata.definition}
-            </p>
-          ) : (
-            <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium" itemProp="abstract">
-              {metadata.description}
-            </p>
-          )}
-
-          {/* Show description separately only if definition exists, otherwise it's already shown above */}
-          {metadata.definition && (
-            <p className="text-xl text-gray-700 mb-6 leading-relaxed" itemProp="description">
-              {metadata.description}
-            </p>
-          )}
+          <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium" itemProp="abstract">
+            {metadata.definition || metadata.description}
+          </p>
 
           <div className="flex items-center gap-4 text-gray-600 border-t border-b border-gray-200 py-4">
             <div itemProp="author" itemScope itemType="https://schema.org/Person">

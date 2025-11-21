@@ -80,6 +80,11 @@ export default function TagPage({ params }: PageProps) {
         <h1 className="text-5xl font-bold text-gray-900 mb-4">
           Articles tagged: {tagDisplayName}
         </h1>
+        {/* Explicit definition paragraph for LLMs - appears immediately after h1 */}
+        {/* This helps LLMs extract the core concept quickly */}
+        <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium">
+          A curated collection of articles focused on {tagDisplayName}, providing insights and strategies related to Generative AI Engine Optimization and AI-powered discovery.
+        </p>
         <p className="text-xl text-gray-700 leading-relaxed">
           {posts.length} {posts.length === 1 ? "article" : "articles"} about {tagDisplayName}
         </p>
