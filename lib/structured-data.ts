@@ -2,11 +2,16 @@ import { PostMetadata, FAQ } from './posts';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
 const SITE_NAME = 'GEO Optimized Blog';
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`; // Default OpenGraph image
 
 /**
  * Generate JSON-LD for a blog post
  */
 export function generateBlogPostingSchema(metadata: PostMetadata) {
+  const imageUrl = metadata.image 
+    ? (metadata.image.startsWith('http') ? metadata.image : `${SITE_URL}${metadata.image}`)
+    : DEFAULT_OG_IMAGE;
+
   return {
     '@context': 'https://schema.org',
     '@type': ['BlogPosting', 'Article'],
@@ -30,6 +35,12 @@ export function generateBlogPostingSchema(metadata: PostMetadata) {
       '@id': `${SITE_URL}/blog/${metadata.slug}`,
     },
     keywords: metadata.tags,
+    image: {
+      '@type': 'ImageObject',
+      url: imageUrl,
+      width: 1200,
+      height: 630,
+    },
   };
 }
 
@@ -90,6 +101,36 @@ export function generateOrganizationSchema() {
     name: SITE_NAME,
     url: SITE_URL,
     description: 'A blog optimized for Generative AI Engine Optimization (GEO) and SEO',
+  };
+}
+
+/**
+ * Generate JSON-LD BreadcrumbList schema
+ */
+export function generateBreadcrumbListSchema(metadata: PostMetadata) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: SITE_URL,
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Blog',
+        item: `${SITE_URL}/blog`,
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: metadata.title,
+        item: `${SITE_URL}/blog/${metadata.slug}`,
+      },
+    ],
   };
 }
 

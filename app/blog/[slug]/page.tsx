@@ -5,6 +5,7 @@ import { markdownToHtml } from "@/lib/markdown";
 import {
   generateBlogPostingSchema,
   generateFAQSchema,
+  generateBreadcrumbListSchema,
 } from "@/lib/structured-data";
 import type { Metadata } from "next";
 
@@ -34,6 +35,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const { metadata } = post;
   const url = `/blog/${metadata.slug}`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
+  const defaultImage = `${siteUrl}/og-image.jpg`;
+  const imageUrl = metadata.image 
+    ? (metadata.image.startsWith('http') ? metadata.image : `${siteUrl}${metadata.image}`)
+    : defaultImage;
 
   return {
     title: metadata.title,
@@ -47,11 +53,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       authors: [metadata.author.name],
       url,
       tags: metadata.tags,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: metadata.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: metadata.title,
       description: metadata.description,
+      images: [imageUrl],
     },
     alternates: {
       canonical: url,
@@ -72,6 +87,7 @@ export default function BlogPostPage({ params }: PageProps) {
 
   // Generate JSON-LD schemas
   const blogPostingSchema = generateBlogPostingSchema(metadata);
+  const breadcrumbSchema = generateBreadcrumbListSchema(metadata);
   const faqSchema = metadata.faq && metadata.faq.length > 0 
     ? generateFAQSchema(metadata.faq) 
     : null;
@@ -82,6 +98,10 @@ export default function BlogPostPage({ params }: PageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
       {faqSchema && (
         <script
@@ -122,9 +142,24 @@ export default function BlogPostPage({ params }: PageProps) {
             {metadata.title}
           </h1>
 
-          <p className="text-xl text-gray-700 mb-6 leading-relaxed" itemProp="description">
-            {metadata.description}
-          </p>
+          {/* Explicit definition paragraph for LLMs - appears immediately after h1 */}
+          {/* This helps LLMs extract the core concept quickly */}
+          {metadata.definition ? (
+            <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium" itemProp="abstract">
+              {metadata.definition}
+            </p>
+          ) : (
+            <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium" itemProp="abstract">
+              {metadata.description}
+            </p>
+          )}
+
+          {/* Show description separately only if definition exists, otherwise it's already shown above */}
+          {metadata.definition && (
+            <p className="text-xl text-gray-700 mb-6 leading-relaxed" itemProp="description">
+              {metadata.description}
+            </p>
+          )}
 
           <div className="flex items-center gap-4 text-gray-600 border-t border-b border-gray-200 py-4">
             <div itemProp="author" itemScope itemType="https://schema.org/Person">
@@ -255,6 +290,48 @@ export default function BlogPostPage({ params }: PageProps) {
             </ul>
           </section>
         )}
+
+        {/* References Section with Authoritative Links */}
+        <section className="border-t border-gray-200 pt-8 mt-12">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-4">References & Resources</h2>
+          <div className="bg-gray-50 rounded-lg p-6">
+            <ul className="space-y-2 text-gray-700">
+              <li>
+                <a 
+                  href="https://schema.org/BlogPosting" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Schema.org BlogPosting Documentation
+                </a>
+                <span className="text-gray-500 text-sm ml-2">— Official structured data specification</span>
+              </li>
+              <li>
+                <a 
+                  href="https://schema.org/BreadcrumbList" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Schema.org BreadcrumbList Documentation
+                </a>
+                <span className="text-gray-500 text-sm ml-2">— Navigation breadcrumb schema</span>
+              </li>
+              <li>
+                <a 
+                  href="https://ogp.me/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-800 underline"
+                >
+                  Open Graph Protocol
+                </a>
+                <span className="text-gray-500 text-sm ml-2">— Social media metadata standard</span>
+              </li>
+            </ul>
+          </div>
+        </section>
       </article>
     </>
   );

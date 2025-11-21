@@ -23,6 +23,8 @@ export interface PostMetadata {
   author: Author;
   tags: string[];
   faq?: FAQ[];
+  image?: string; // Optional OpenGraph/Twitter image URL
+  definition?: string; // Optional explicit definition paragraph after h1
 }
 
 export interface Post {

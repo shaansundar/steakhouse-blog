@@ -18,9 +18,6 @@ export function markdownToHtml(markdown: string): string {
   // Italic
   html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
 
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
-
   // Helper function to escape HTML entities
   // Note: & must be escaped last to avoid double-escaping existing entities
   function escapeHtml(text: string): string {
@@ -31,6 +28,17 @@ export function markdownToHtml(markdown: string): string {
       .replace(/'/g, '&#39;')
       .replace(/&/g, '&amp;'); // Escape & last to avoid double-escaping
   }
+
+  // Links
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
+
+  // Images with alt text: ![alt text](image-url) or ![alt text](image-url "title")
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)(?:\s+"([^"]+)")?\)/gim, (match, altText, imageUrl, title) => {
+    // Ensure alt text exists - if empty, use a descriptive default
+    const alt = altText.trim() || 'Image';
+    const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
+    return `<img src="${imageUrl}" alt="${escapeHtml(alt)}"${titleAttr} />`;
+  });
 
   // Code blocks - escape HTML entities inside code blocks
   html = html.replace(/```([\s\S]*?)```/gim, (match, code) => {
