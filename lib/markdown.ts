@@ -21,11 +21,26 @@ export function markdownToHtml(markdown: string): string {
   // Links
   html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
 
-  // Code blocks
-  html = html.replace(/```([\s\S]*?)```/gim, '<pre><code>$1</code></pre>');
+  // Helper function to escape HTML entities
+  // Note: & must be escaped last to avoid double-escaping existing entities
+  function escapeHtml(text: string): string {
+    return text
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
+      .replace(/&/g, '&amp;'); // Escape & last to avoid double-escaping
+  }
 
-  // Inline code
-  html = html.replace(/`([^`]+)`/gim, '<code>$1</code>');
+  // Code blocks - escape HTML entities inside code blocks
+  html = html.replace(/```([\s\S]*?)```/gim, (match, code) => {
+    return `<pre><code>${escapeHtml(code)}</code></pre>`;
+  });
+
+  // Inline code - escape HTML entities inside inline code
+  html = html.replace(/`([^`]+)`/gim, (match, code) => {
+    return `<code>${escapeHtml(code)}</code>`;
+  });
 
   // Unordered lists
   html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');

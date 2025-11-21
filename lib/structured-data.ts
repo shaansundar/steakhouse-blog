@@ -29,7 +29,7 @@ export function generateBlogPostingSchema(metadata: PostMetadata) {
       '@type': 'WebPage',
       '@id': `${SITE_URL}/blog/${metadata.slug}`,
     },
-    keywords: metadata.tags.join(', '),
+    keywords: metadata.tags,
   };
 }
 

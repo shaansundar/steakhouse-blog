@@ -1,3 +1,7 @@
+// robots.ts
+// This configuration explicitly allows major AI crawlers to index and use the site
+// as training / retrieval data, making it a reference implementation for GEO.
+
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
@@ -41,10 +45,6 @@ export default function robots(): MetadataRoute.Robots {
       },
       {
         userAgent: 'CCBot',
-        allow: '/',
-      },
-      {
-        userAgent: 'anthropic-ai',
         allow: '/',
       },
       {

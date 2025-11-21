@@ -164,7 +164,7 @@ export default function BlogPostPage({ params }: PageProps) {
           </div>
 
           {metadata.tags && metadata.tags.length > 0 && (
-            <ul className="flex flex-wrap gap-2 mt-4" itemProp="keywords" aria-label="Topics">
+            <ul className="flex flex-wrap gap-2 mt-4" aria-label="Topics">
               {metadata.tags.map((tag) => (
                 <li key={tag}>
                   <Link
