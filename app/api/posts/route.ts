@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import matter from 'gray-matter';
 
-const postsDirectory = path.join(process.cwd(), 'content/posts');
+const postsDirectory = path.join(process.cwd(), 'contents/blogs');
 
 /**
  * Generate a slug from a title string
@@ -17,60 +16,22 @@ function generateSlug(title: string): string {
     .replace(/-+/g, '-'); // Replace multiple hyphens with single hyphen
 }
 
+
 /**
- * Ensure required frontmatter fields exist
+ * Extract slug from HTML title
  */
-function ensureRequiredFields(data: any, content: string): any {
-  const now = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-  
-  // Generate slug from title if missing
-  if (!data.slug && data.title) {
-    data.slug = generateSlug(data.title);
-  } else if (!data.slug) {
-    // If no title either, generate a timestamp-based slug
-    data.slug = `post-${Date.now()}`;
+function extractSlugFromHtml(html: string): string {
+  const h1Match = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
+  if (h1Match) {
+    const title = h1Match[1].replace(/<[^>]*>/g, '').trim();
+    return generateSlug(title);
   }
-
-  // Set default title if missing
-  if (!data.title) {
-    data.title = 'Untitled Post';
-  }
-
-  // Set default description if missing (use first 160 chars of content)
-  if (!data.description) {
-    const firstParagraph = content.trim().split('\n\n')[0] || '';
-    data.description = firstParagraph.substring(0, 160).trim();
-  }
-
-  // Set default publishedAt if missing
-  if (!data.publishedAt) {
-    data.publishedAt = now;
-  }
-
-  // Set default updatedAt if missing
-  if (!data.updatedAt) {
-    data.updatedAt = now;
-  }
-
-  // Set default author if missing
-  if (!data.author) {
-    data.author = {
-      name: 'Anonymous',
-      url: 'https://steakhouse-test-nimbushq.xyz',
-    };
-  }
-
-  // Ensure tags is an array
-  if (!data.tags) {
-    data.tags = [];
-  }
-
-  return data;
+  return `post-${Date.now()}`;
 }
 
 /**
  * POST /api/posts
- * Creates a new blog post from markdown content
+ * Creates a new blog post from HTML content
  */
 export async function POST(request: NextRequest) {
   try {
@@ -78,35 +39,22 @@ export async function POST(request: NextRequest) {
 
     if (!body || body.trim().length === 0) {
       return NextResponse.json(
-        { error: 'Request body is empty. Please provide markdown content.' },
+        { error: 'Request body is empty. Please provide HTML content.' },
         { status: 400 }
       );
     }
 
-    // Parse the markdown with frontmatter
-    let parsed;
-    try {
-      parsed = matter(body);
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid markdown format. Could not parse frontmatter.' },
-        { status: 400 }
-      );
-    }
-
-    const { data, content } = parsed;
-
-    // Ensure required fields exist
-    const metadata = ensureRequiredFields(data, content);
+    // Extract slug from HTML title
+    const slug = extractSlugFromHtml(body);
 
     // Generate filename from slug
-    const filename = `${metadata.slug}.md`;
+    const filename = `${slug}.html`;
     const filePath = path.join(postsDirectory, filename);
 
     // Check if file already exists
     if (fs.existsSync(filePath)) {
       return NextResponse.json(
-        { error: `A post with slug "${metadata.slug}" already exists. Please use a different slug.` },
+        { error: `A post with slug "${slug}" already exists. Please use a different title.` },
         { status: 409 }
       );
     }
@@ -116,17 +64,14 @@ export async function POST(request: NextRequest) {
       fs.mkdirSync(postsDirectory, { recursive: true });
     }
 
-    // Reconstruct the markdown with updated frontmatter
-    const frontmatterString = matter.stringify(content, metadata);
-
-    // Write the file
-    fs.writeFileSync(filePath, frontmatterString, 'utf8');
+    // Write the HTML file
+    fs.writeFileSync(filePath, body, 'utf8');
 
     return NextResponse.json(
       {
         success: true,
         message: 'Post created successfully',
-        slug: metadata.slug,
+        slug,
         filename,
         path: filePath,
       },

@@ -1,97 +1,49 @@
 import { addExternalLinks } from './external-links';
 
 /**
- * Simple markdown to HTML converter for blog posts
- * This is a basic implementation. For production, consider using a library like remark or marked.
+ * Process HTML content for blog posts
+ * Adds IDs to step headings for deep linking and processes external links
  */
-export function markdownToHtml(markdown: string, addCitations: boolean = true): string {
-  let html = markdown;
+export function processHtml(html: string, addCitations: boolean = true): string {
+  let processedHtml = html;
 
-  // Headers
-  // Convert # to h2 (since page title is already h1), ## to h3, ### to h4, etc.
-  // Add IDs to step headings for deep linking
+  // Add IDs to step headings for deep linking (h3 and h4 with "Step X:" pattern)
   let stepCounter = 0;
-  html = html.replace(/^#### (.*$)/gim, (match, text) => {
-    const stepMatch = text.match(/^Step\s+(\d+)[:\s]+(.+)$/i);
-    if (stepMatch) {
-      stepCounter++;
-      const stepId = `step-${stepCounter}`;
-      return `<h4 id="${stepId}">${text}</h4>`;
-    }
-    return `<h4>${text}</h4>`;
-  });
-  html = html.replace(/^### (.*$)/gim, (match, text) => {
+  
+  // Process h3 headings
+  processedHtml = processedHtml.replace(/<h3[^>]*>(.*?)<\/h3>/gi, (match, text) => {
     const stepMatch = text.match(/^Step\s+(\d+)[:\s]+(.+)$/i);
     if (stepMatch) {
       stepCounter++;
       const stepId = `step-${stepCounter}`;
       return `<h3 id="${stepId}">${text}</h3>`;
     }
-    return `<h3>${text}</h3>`;
-  });
-  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-  html = html.replace(/^# (.*$)/gim, '<h2>$1</h2>'); // Convert # to h2 to maintain single h1 per page
-
-  // Bold
-  html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
-
-  // Italic
-  html = html.replace(/\*(.*?)\*/gim, '<em>$1</em>');
-
-  // Helper function to escape HTML entities
-  // Note: & must be escaped last to avoid double-escaping existing entities
-  function escapeHtml(text: string): string {
-    return text
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#39;')
-      .replace(/&/g, '&amp;'); // Escape & last to avoid double-escaping
-  }
-
-  // Links
-  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/gim, '<a href="$2">$1</a>');
-
-  // Images with alt text: ![alt text](image-url) or ![alt text](image-url "title")
-  html = html.replace(/!\[([^\]]*)\]\(([^)]+)(?:\s+"([^"]+)")?\)/gim, (match, altText, imageUrl, title) => {
-    // Ensure alt text exists - if empty, use a descriptive default
-    const alt = altText.trim() || 'Image';
-    const titleAttr = title ? ` title="${escapeHtml(title)}"` : '';
-    return `<img src="${imageUrl}" alt="${escapeHtml(alt)}"${titleAttr} />`;
+    return match;
   });
 
-  // Code blocks - escape HTML entities inside code blocks
-  html = html.replace(/```([\s\S]*?)```/gim, (match, code) => {
-    return `<pre><code>${escapeHtml(code)}</code></pre>`;
+  // Process h4 headings
+  processedHtml = processedHtml.replace(/<h4[^>]*>(.*?)<\/h4>/gi, (match, text) => {
+    const stepMatch = text.match(/^Step\s+(\d+)[:\s]+(.+)$/i);
+    if (stepMatch) {
+      stepCounter++;
+      const stepId = `step-${stepCounter}`;
+      return `<h4 id="${stepId}">${text}</h4>`;
+    }
+    return match;
   });
-
-  // Inline code - escape HTML entities inside inline code
-  html = html.replace(/`([^`]+)`/gim, (match, code) => {
-    return `<code>${escapeHtml(code)}</code>`;
-  });
-
-  // Unordered lists
-  html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-  html = html.replace(/(<li>.*<\/li>)/gim, '<ul>$1</ul>');
-
-  // Paragraphs (split by double newlines)
-  const paragraphs = html.split('\n\n');
-  html = paragraphs
-    .map((para) => {
-      const trimmed = para.trim();
-      // Don't wrap if already wrapped in a tag
-      if (trimmed.startsWith('<') || trimmed === '') {
-        return trimmed;
-      }
-      return `<p>${trimmed}</p>`;
-    })
-    .join('\n');
 
   // Add external links for citations (if enabled)
   if (addCitations) {
-    html = addExternalLinks(html);
+    processedHtml = addExternalLinks(processedHtml);
   }
 
-  return html;
+  return processedHtml;
+}
+
+/**
+ * @deprecated Use processHtml instead. This function is kept for backward compatibility.
+ */
+export function markdownToHtml(markdown: string, addCitations: boolean = true): string {
+  return processHtml(markdown, addCitations);
 }
 

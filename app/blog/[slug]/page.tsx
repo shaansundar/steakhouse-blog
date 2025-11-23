@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllPostSlugs, getPostBySlug, getRelatedPosts } from "@/lib/posts";
-import { markdownToHtml } from "@/lib/markdown";
+import { processHtml } from "@/lib/markdown";
 import {
   generateBlogPostingSchema,
   generateFAQSchema,
@@ -86,7 +86,7 @@ export default function BlogPostPage({ params }: PageProps) {
   }
 
   const { metadata, content } = post;
-  const htmlContent = markdownToHtml(content);
+  const htmlContent = processHtml(content);
   const relatedPosts = getRelatedPosts(params.slug);
   
   // Calculate reading time
@@ -105,32 +105,31 @@ export default function BlogPostPage({ params }: PageProps) {
   const webPageSchema = generateWebPageSchema(metadata);
   
   // Generate HowTo schema if content contains step-by-step instructions
-  // Extract steps from markdown content (looking for ### Step X: pattern)
+  // Extract steps from HTML content (looking for <h3> or <h4> with Step X: pattern)
   const howToSteps: HowToStep[] = [];
-  const stepPattern = /^###\s+Step\s+(\d+)[:\s]+(.+)$/gim;
+  const stepPattern = /<h[34][^>]*>.*?Step\s+(\d+)[:\s]+(.+?)<\/h[34]>/gi;
   const stepMatches = [...content.matchAll(stepPattern)];
   
   if (stepMatches.length >= 2) {
     stepMatches.forEach((match, index) => {
       const stepNumber = parseInt(match[1], 10);
-      const stepTitle = match[2].trim();
+      const stepTitle = match[2].replace(/<[^>]*>/g, '').trim();
       
-      // Extract step content (text between this heading and next heading or end)
+      // Extract step content (HTML between this heading and next heading or end)
       const stepStartIndex = match.index! + match[0].length;
       const nextStepIndex = index < stepMatches.length - 1 
         ? stepMatches[index + 1].index!
         : content.length;
       
-      let stepText = content.substring(stepStartIndex, nextStepIndex)
-        .replace(/^###.*$/gm, '') // Remove any nested headings
-        .replace(/```[\s\S]*?```/g, '') // Remove code blocks
-        .replace(/`[^`]+`/g, '') // Remove inline code
-        .trim();
+      let stepHtml = content.substring(stepStartIndex, nextStepIndex);
+      // Extract text from first paragraph
+      const firstPMatch = stepHtml.match(/<p[^>]*>(.*?)<\/p>/i);
+      let stepText = firstPMatch 
+        ? firstPMatch[1].replace(/<[^>]*>/g, '').trim()
+        : stepHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
       
       // Clean up and limit length
-      stepText = stepText.split('\n\n')[0] // Take first paragraph
-        .replace(/\n/g, ' ')
-        .replace(/\s+/g, ' ')
+      stepText = stepText
         .substring(0, 500)
         .trim();
       

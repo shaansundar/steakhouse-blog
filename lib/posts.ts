@@ -1,8 +1,7 @@
 import fs from 'fs';
 import path from 'path';
-import matter from 'gray-matter';
 
-const postsDirectory = path.join(process.cwd(), 'content/posts');
+const postsDirectory = path.join(process.cwd(), 'contents/blogs');
 
 export interface Author {
   name: string;
@@ -33,14 +32,52 @@ export interface Post {
 }
 
 /**
+ * Extract metadata from HTML content
+ */
+function extractMetadataFromHtml(html: string, slug: string): PostMetadata {
+  // Extract title from first h1 tag
+  const h1Match = html.match(/<h1[^>]*>(.*?)<\/h1>/i);
+  const title = h1Match ? h1Match[1].replace(/<[^>]*>/g, '').trim() : 'Untitled Post';
+
+  // Extract description from first paragraph (preferably one with Tl;Dr)
+  let description = '';
+  const tldrMatch = html.match(/<p[^>]*>.*?<b[^>]*>Tl;Dr:?<\/b>.*?<\/p>/i);
+  if (tldrMatch) {
+    description = tldrMatch[0].replace(/<[^>]*>/g, '').replace(/Tl;Dr:?\s*/i, '').trim();
+  } else {
+    // Fallback to first paragraph
+    const firstPMatch = html.match(/<p[^>]*>(.*?)<\/p>/i);
+    if (firstPMatch) {
+      description = firstPMatch[1].replace(/<[^>]*>/g, '').trim().substring(0, 160);
+    }
+  }
+
+  // Use current date as default
+  const now = new Date().toISOString().split('T')[0];
+
+  return {
+    title,
+    description: description || 'No description available',
+    slug,
+    publishedAt: now,
+    updatedAt: now,
+    author: {
+      name: 'Anonymous',
+      url: 'https://steakhouse-test.nimbushq.xyz',
+    },
+    tags: [],
+  };
+}
+
+/**
  * Get all post slugs from the content directory
  */
 export function getAllPostSlugs(): string[] {
   try {
     const fileNames = fs.readdirSync(postsDirectory);
     return fileNames
-      .filter((fileName) => fileName.endsWith('.md') || fileName.endsWith('.mdx'))
-      .map((fileName) => fileName.replace(/\.(md|mdx)$/, ''));
+      .filter((fileName) => fileName.endsWith('.html'))
+      .map((fileName) => fileName.replace(/\.html$/, ''));
   } catch (error) {
     console.error('Error reading posts directory:', error);
     return [];
@@ -52,33 +89,15 @@ export function getAllPostSlugs(): string[] {
  */
 export function getPostBySlug(slug: string): Post | null {
   try {
-    const fullPath = path.join(postsDirectory, `${slug}.md`);
-    
-    // Try .md first, then .mdx
-    let fileContents: string;
-    try {
-      fileContents = fs.readFileSync(fullPath, 'utf8');
-    } catch {
-      const mdxPath = path.join(postsDirectory, `${slug}.mdx`);
-      fileContents = fs.readFileSync(mdxPath, 'utf8');
-    }
+    const fullPath = path.join(postsDirectory, `${slug}.html`);
+    const fileContents = fs.readFileSync(fullPath, 'utf8');
 
-    const { data, content } = matter(fileContents);
+    // Extract metadata from HTML
+    const metadata = extractMetadataFromHtml(fileContents, slug);
 
     return {
-      metadata: {
-        title: data.title,
-        description: data.description,
-        slug: data.slug || slug,
-        publishedAt: data.publishedAt,
-        updatedAt: data.updatedAt,
-        author: data.author,
-        tags: data.tags || [],
-        faq: data.faq || [],
-        definition: data.definition,
-        image: data.image,
-      },
-      content,
+      metadata,
+      content: fileContents, // Return HTML content as-is
     };
   } catch (error) {
     console.error(`Error reading post ${slug}:`, error);
