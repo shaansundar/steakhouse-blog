@@ -192,7 +192,14 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     : null;
 
   // Generate structured data
-  const blogPostingSchema = generateBlogPostingSchema(post);
+  // Extract plain text from content for articleBody (strip HTML tags)
+  const articleBodyText = post.rawContent
+    .replace(/<[^>]+>/g, ' ') // Remove HTML tags
+    .replace(/\s+/g, ' ') // Normalize whitespace
+    .trim()
+    .substring(0, 5000); // Limit to 5000 chars for structured data
+  
+  const blogPostingSchema = generateBlogPostingSchema(post, articleBodyText);
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "Home", url: "/" },
     { name: "Blog", url: "/blog" },

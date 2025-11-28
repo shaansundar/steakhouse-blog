@@ -64,8 +64,9 @@ export function generateWebsiteSchema() {
 
 /**
  * BlogPosting schema for individual blog posts
+ * Follows Schema.org best practices: https://schema.org/BlogPosting
  */
-export function generateBlogPostingSchema(post: PostMeta) {
+export function generateBlogPostingSchema(post: PostMeta, articleBody?: string) {
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
   
   // Normalize author to string
@@ -81,7 +82,13 @@ export function generateBlogPostingSchema(post: PostMeta) {
     authorSchema.url = authorUrl;
   }
   
-  return {
+  // Calculate word count if articleBody is provided
+  const wordCount = articleBody 
+    ? articleBody.split(/\s+/).filter(word => word.length > 0).length 
+    : undefined;
+  
+  // Build schema following Schema.org recommendations
+  const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
@@ -102,12 +109,45 @@ export function generateBlogPostingSchema(post: PostMeta) {
       '@id': postUrl,
     },
     url: postUrl,
-    image: post.ogImage || `${SITE_URL}/og-default.png`,
+    image: post.ogImage ? {
+      '@type': 'ImageObject',
+      url: post.ogImage.startsWith('http') ? post.ogImage : `${SITE_URL}${post.ogImage}`,
+    } : {
+      '@type': 'ImageObject',
+      url: `${SITE_URL}/og-default.png`,
+    },
     keywords: post.tags.join(', '),
     articleSection: post.tags[0] || 'Technology',
-    wordCount: undefined, // Can be calculated if needed
     inLanguage: 'en-US',
   };
+  
+  // Add wordCount if available
+  if (wordCount) {
+    schema.wordCount = wordCount;
+  }
+  
+  // Add articleBody if provided (helps AI understand full content)
+  if (articleBody) {
+    schema.articleBody = articleBody;
+  }
+  
+  // Add about property for topics (helps with entity recognition)
+  if (post.tags.length > 0) {
+    schema.about = post.tags.map(tag => ({
+      '@type': 'Thing',
+      name: tag,
+    }));
+  }
+  
+  // Add genre/articleSection for better categorization
+  if (post.tags.length > 0) {
+    schema.genre = post.tags;
+  }
+  
+  // Ensure dates are in ISO 8601 format (already handled by normalizeDate)
+  // Schema.org requires ISO 8601 format
+  
+  return schema;
 }
 
 /**
@@ -128,19 +168,30 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
 
 /**
  * FAQPage schema for FAQ sections
+ * Follows Schema.org best practices: https://schema.org/FAQPage
  */
 export function generateFAQSchema(faqs: { question: string; answer: string }[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
-    })),
+    mainEntity: faqs.map((faq) => {
+      // Clean answer text (remove markdown formatting if present)
+      const cleanAnswer = faq.answer
+        .replace(/\*\*([^*]+)\*\*/g, '$1') // Remove bold
+        .replace(/\*([^*]+)\*/g, '$1') // Remove italic
+        .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1') // Remove links, keep text
+        .replace(/\s+/g, ' ') // Normalize whitespace
+        .trim();
+      
+      return {
+        '@type': 'Question',
+        name: faq.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: cleanAnswer,
+        },
+      };
+    }),
   };
 }
 
