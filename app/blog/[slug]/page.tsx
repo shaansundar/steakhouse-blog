@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { getPostBySlug, getAllPosts, extractHeadings, extractFAQs } from "@/lib/posts";
+import { getPostBySlug, getAllPosts, extractHeadings, extractFAQs, getAuthorName } from "@/lib/posts";
 import { detectCrawler } from "@/lib/userAgent";
 import { incrementPageView, getPageViewStats } from "@/lib/supabaseServer";
 import {
@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { ViewCount } from "@/components/view-count";
 import { CrawlerStats } from "@/components/crawler-stats";
 import { MobileTOC } from "@/components/mobile-toc";
+import { PostFAQ } from "@/components/post-faq";
 import {
   Calendar,
   Clock,
@@ -52,11 +53,10 @@ export async function generateMetadata({
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
 
   // Ensure meta description is optimal length (120-160 chars)
-  let metaDescription = post.excerpt;
+  let metaDescription = post.description;
   if (metaDescription.length < 120) {
     // Extend with more context if too short - use natural language, avoid keyword stuffing
-    const tag = post.tags[0] || 'content strategy';
-    metaDescription = `${post.excerpt} Discover insights and practical guidance for modern content creators.`;
+    metaDescription = `${post.description} Discover insights and practical guidance for modern content creators.`;
   }
   if (metaDescription.length > 160) {
     // Truncate to 160 chars at word boundary
@@ -84,7 +84,7 @@ export async function generateMetadata({
   return {
     title: seoTitle,
     description: metaDescription,
-    authors: [{ name: post.author }],
+        authors: [{ name: getAuthorName(post.author) }],
     robots: {
       index: true,
       follow: true,
@@ -109,7 +109,7 @@ export async function generateMetadata({
       type: "article",
       publishedTime: post.publishedAt,
       modifiedTime: post.updatedAt || post.publishedAt,
-      authors: [post.author],
+          authors: [getAuthorName(post.author)],
       images: post.ogImage
         ? [{ url: post.ogImage, width: 1200, height: 630, alt: post.title }]
         : [{ url: "/og-default.png", width: 1200, height: 630, alt: post.title }],
@@ -159,8 +159,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   // Extract headings for table of contents
   const headings = extractHeadings(post.rawContent);
   
-  // Extract FAQs from content
-  const faqs = extractFAQs(post.rawContent);
+  // Extract FAQs from frontmatter first, then fall back to content extraction
+  const faqs = extractFAQs(post.rawContent, post.faq);
 
   // Get related posts (same tags, different slug)
   const allPosts = getAllPosts();
@@ -269,15 +269,15 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </h1>
 
               {/* Excerpt */}
-              <p className="text-lg lg:text-xl text-muted-foreground mb-6 leading-relaxed">
-                {post.excerpt}
-              </p>
+                  <p className="text-lg lg:text-xl text-muted-foreground mb-6 leading-relaxed">
+                    {post.description}
+                  </p>
 
               {/* Meta */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span className="font-medium">{post.author}</span>
+                  <span className="font-medium">{getAuthorName(post.author)}</span>
                 </div>
                 <Separator orientation="vertical" className="h-4" />
                 <div className="flex items-center gap-2">
@@ -346,9 +346,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                           </CardTitle>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {related.excerpt}
-                          </p>
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {related.description}
+                              </p>
                         </CardContent>
                       </Card>
                     </Link>
@@ -404,6 +404,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   </CardContent>
                 </Card>
               )}
+
+              {/* FAQ Section */}
+              {faqs.length > 0 && <PostFAQ faqs={faqs} />}
 
               {/* Crawler Statistics */}
               <CrawlerStats slug={post.slug} />

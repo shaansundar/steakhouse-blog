@@ -68,15 +68,25 @@ export function generateWebsiteSchema() {
 export function generateBlogPostingSchema(post: PostMeta) {
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
   
+  // Normalize author to string
+  const authorName = typeof post.author === 'string' ? post.author : post.author.name;
+  const authorUrl = typeof post.author === 'object' && post.author.url ? post.author.url : undefined;
+  
+  const authorSchema: any = {
+    '@type': 'Person',
+    name: authorName,
+  };
+  
+  if (authorUrl) {
+    authorSchema.url = authorUrl;
+  }
+  
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
-    description: post.excerpt,
-    author: {
-      '@type': 'Person',
-      name: post.author,
-    },
+    description: post.description,
+    author: authorSchema,
     publisher: {
       '@type': 'Organization',
       name: 'SteakHouse',

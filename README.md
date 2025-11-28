@@ -89,23 +89,28 @@ Example: `2025-11-28--what-is-generative-engine-optimization.md`
 ```yaml
 ---
 title: "Your Post Title"
-slug: optional-custom-slug  # If omitted, derived from filename
-excerpt: "A compelling description for SEO and previews (150-160 chars)"
+description: "A compelling description for SEO and previews (150-160 chars)"
+slug: "optional-custom-slug"  # If omitted, derived from filename
+publishedAt: "2025-11-28"  # Format: YYYY-MM-DD or ISO string
+updatedAt: "2025-11-28"  # Optional, same format
+author:
+  name: "Your Name"
+  url: "https://your-site.com/about"  # Optional author URL
 tags:
-  - GEO
-  - AI Discovery
-  - Content Strategy
-publishedAt: "2025-11-28T10:00:00Z"
-updatedAt: "2025-11-28T12:00:00Z"  # Optional
-author: "Your Name"
+  - "GEO"
+  - "AI Discovery"
+  - "Content Strategy"
+faq:  # Optional: FAQs in frontmatter (preferred over content extraction)
+  - question: "What is GEO?"
+    answer: "Generative Engine Optimization (GEO) is the practice of optimizing content for AI systems."
+  - question: "How does GEO differ from SEO?"
+    answer: "SEO focuses on ranking in search results, while GEO focuses on being cited in AI-generated answers."
 ogImage: "/og/your-post.png"  # Optional
 ---
 
 # Your Post Title
 
-**TL;DR:** A brief summary (under 50 words) for AI systems to easily extract.
-
-## Your Content Here...
+Your content here...
 ```
 
 ### GEO-Optimized Structure

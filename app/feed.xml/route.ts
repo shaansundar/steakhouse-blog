@@ -6,7 +6,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { getAllPosts } from "@/lib/posts";
+import { getAllPosts, getAuthorName } from "@/lib/posts";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
 const SITE_NAME = "SteakHouse Blog";
@@ -26,8 +26,8 @@ export async function GET() {
       <title><![CDATA[${post.title}]]></title>
       <link>${postUrl}</link>
       <guid isPermaLink="true">${postUrl}</guid>
-      <description><![CDATA[${post.excerpt}]]></description>
-      <author>${post.author}</author>
+      <description><![CDATA[${post.description}]]></description>
+      <author>${getAuthorName(post.author)}</author>
       <pubDate>${pubDate}</pubDate>
       <updated>${updatedDate}</updated>
       <category>${post.tags.join(", ")}</category>

@@ -17,17 +17,30 @@ import keywordsData from './keywords.json';
 // Directory containing markdown posts
 const postsDirectory = path.join(process.cwd(), 'content/posts');
 
+// Author interface
+export interface Author {
+  name: string;
+  url?: string;
+}
+
+// FAQ interface
+export interface FAQ {
+  question: string;
+  answer: string;
+}
+
 // Post metadata interface
 export interface PostMeta {
   slug: string;
   title: string;
-  excerpt: string;
+  description: string;
   tags: string[];
   publishedAt: string;
   updatedAt?: string;
-  author: string;
+  author: Author | string; // Support both object and string for backward compatibility
   readingTime: string;
   ogImage?: string;
+  faq?: FAQ[]; // FAQs from frontmatter
 }
 
 // Full post interface including content
@@ -69,6 +82,64 @@ export function getPostSlugs(): string[] {
 }
 
 /**
+ * Normalize date string to ISO format
+ * Handles both "YYYY-MM-DD" and ISO string formats
+ */
+function normalizeDate(dateStr: string | undefined): string {
+  if (!dateStr) {
+    return new Date().toISOString();
+  }
+  
+  // If already ISO format, return as-is
+  if (dateStr.includes('T') || dateStr.includes('Z')) {
+    return dateStr;
+  }
+  
+  // If "YYYY-MM-DD" format, convert to ISO
+  if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return new Date(dateStr + 'T00:00:00Z').toISOString();
+  }
+  
+  // Try to parse as date
+  const parsed = new Date(dateStr);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString();
+  }
+  
+  return new Date().toISOString();
+}
+
+/**
+ * Normalize author to Author object
+ * Handles both object and string formats for backward compatibility
+ */
+function normalizeAuthor(author: any): Author | string {
+  if (!author) {
+    return 'SteakHouse Team';
+  }
+  
+  // If already an object with name, return as-is
+  if (typeof author === 'object' && author.name) {
+    return author as Author;
+  }
+  
+  // If string, return as-is (backward compatibility)
+  if (typeof author === 'string') {
+    return author;
+  }
+  
+  return 'SteakHouse Team';
+}
+
+/**
+ * Helper function to safely get author name as string
+ * Use this when rendering author in React components
+ */
+export function getAuthorName(author: Author | string): string {
+  return typeof author === 'string' ? author : author.name;
+}
+
+/**
  * Get all posts with metadata, sorted by publishedAt descending
  */
 export function getAllPosts(): PostMeta[] {
@@ -94,13 +165,14 @@ export function getAllPosts(): PostMeta[] {
       return {
         slug,
         title: data.title || 'Untitled',
-        excerpt: data.excerpt || '',
+        description: data.description || data.excerpt || '', // Support both description and excerpt
         tags: data.tags || [],
-        publishedAt: data.publishedAt || new Date().toISOString(),
-        updatedAt: data.updatedAt,
-        author: data.author || 'SteakHouse Team',
+        publishedAt: normalizeDate(data.publishedAt),
+        updatedAt: data.updatedAt ? normalizeDate(data.updatedAt) : undefined,
+        author: normalizeAuthor(data.author),
         readingTime,
         ogImage: data.ogImage,
+        faq: data.faq || undefined, // FAQs from frontmatter
       } as PostMeta;
     })
     // Sort by publishedAt descending (newest first)
@@ -120,11 +192,35 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   const filenames = fs.readdirSync(postsDirectory);
   
   // Find the file that matches this slug
-  const filename = filenames.find((name) => {
-    if (!name.endsWith('.md')) return false;
+  // Check both filename slug and frontmatter slug
+  let filename: string | undefined;
+  
+  for (const name of filenames) {
+    if (!name.endsWith('.md')) continue;
+    
+    // First check if filename slug matches
     const fileSlug = extractSlugFromFilename(name);
-    return fileSlug === slug;
-  });
+    if (fileSlug === slug) {
+      filename = name;
+      break;
+    }
+    
+    // Also check frontmatter slug
+    try {
+      const filePath = path.join(postsDirectory, name);
+      const fileContents = fs.readFileSync(filePath, 'utf8');
+      const { data } = matter(fileContents);
+      const frontmatterSlug = data.slug;
+      
+      if (frontmatterSlug === slug) {
+        filename = name;
+        break;
+      }
+    } catch (error) {
+      // Skip files that can't be parsed
+      continue;
+    }
+  }
   
   if (!filename) {
     return null;
@@ -153,13 +249,14 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   return {
     slug: data.slug || slug,
     title: data.title || 'Untitled',
-    excerpt: data.excerpt || '',
+    description: data.description || data.excerpt || '', // Support both description and excerpt
     tags: data.tags || [],
-    publishedAt: data.publishedAt || new Date().toISOString(),
-    updatedAt: data.updatedAt,
-    author: data.author || 'SteakHouse Team',
+    publishedAt: normalizeDate(data.publishedAt),
+    updatedAt: data.updatedAt ? normalizeDate(data.updatedAt) : undefined,
+    author: normalizeAuthor(data.author),
     readingTime,
     ogImage: data.ogImage,
+    faq: data.faq || undefined, // FAQs from frontmatter
     content: htmlContent,
     rawContent: content,
   };
@@ -262,7 +359,7 @@ function addInternalLinks(html: string, currentSlug: string): string {
   
   allKeywords.forEach(keyword => {
     const matchingPosts = otherPosts.filter(post => {
-      const searchText = `${post.title} ${post.excerpt} ${post.tags.join(' ')} ${post.slug}`.toLowerCase();
+      const searchText = `${post.title} ${post.description} ${post.tags.join(' ')} ${post.slug}`.toLowerCase();
       return searchText.includes(keyword.toLowerCase());
     });
     
@@ -448,10 +545,16 @@ function addInternalLinks(html: string, currentSlug: string): string {
 
 /**
  * Extract FAQs from markdown content
+ * First checks frontmatter faq field, then falls back to content extraction
  * Looks for FAQ sections with H3 headings as questions and following paragraphs as answers
  */
-export function extractFAQs(content: string): { question: string; answer: string }[] {
-  const faqs: { question: string; answer: string }[] = [];
+export function extractFAQs(content: string, frontmatterFaq?: FAQ[]): FAQ[] {
+  // If FAQs are provided in frontmatter, use those first (more reliable)
+  if (frontmatterFaq && frontmatterFaq.length > 0) {
+    return frontmatterFaq;
+  }
+  
+  const faqs: FAQ[] = [];
   
   // Look for FAQ section - typically after "Frequently Asked Questions" or "FAQ" heading
   // Find the FAQ section start index
