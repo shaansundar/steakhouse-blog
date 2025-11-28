@@ -3,6 +3,7 @@ import { Crimson_Pro, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 // Elegant serif for headings and body - distinctive, not generic
 const crimsonPro = Crimson_Pro({
@@ -122,6 +123,7 @@ export default function RootLayout({
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />
+        <SpeedInsights />
       </body>
     </html>
   );
