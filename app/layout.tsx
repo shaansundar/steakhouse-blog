@@ -4,6 +4,7 @@ import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next"
 
 // Modern sans-serif for headings and body
 const inter = Inter({
@@ -136,6 +137,7 @@ export default function RootLayout({
         <main className="flex-1">{children}</main>
         <Footer />
         <SpeedInsights />
+        <Analytics />
       </body>
     </html>
   );
