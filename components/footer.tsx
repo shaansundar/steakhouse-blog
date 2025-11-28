@@ -105,13 +105,34 @@ export function Footer() {
 
         <Separator className="my-8" />
 
+        {/* SEO/AI Discovery Links - Visible to crawlers but styled subtly */}
+        <div className="mb-6 text-center">
+          <div className="inline-flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
+            <Link href="/robots.txt" className="hover:text-foreground transition-colors">
+              robots.txt
+            </Link>
+            <span aria-hidden="true">•</span>
+            <Link href="/sitemap.xml" className="hover:text-foreground transition-colors">
+              sitemap.xml
+            </Link>
+            <span aria-hidden="true">•</span>
+            <Link href="/llms.txt" className="hover:text-foreground transition-colors">
+              llms.txt
+            </Link>
+            <span aria-hidden="true">•</span>
+            <Link href="/feed.xml" className="hover:text-foreground transition-colors">
+              RSS Feed
+            </Link>
+          </div>
+        </div>
+
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-sm text-muted-foreground">
             © {currentYear} SteakHouse. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             <a
-              href="https://twitter.com/SteakHousedev"
+              href="https://twitter.com/trysteakhouse"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -119,7 +140,7 @@ export function Footer() {
               Twitter
             </a>
             <a
-              href="https://github.com/SteakHouse"
+              href="https://github.com/nimbushq"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"

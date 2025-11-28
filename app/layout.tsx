@@ -31,10 +31,6 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  // Preload fonts for faster LCP
-  other: {
-    "font-display": "optional",
-  },
   title: {
     default: "SteakHouse Blog | GEO & AI Content Optimization",
     template: "%s | SteakHouse Blog",
@@ -101,6 +97,9 @@ export const metadata: Metadata = {
     google: process.env.GOOGLE_SITE_VERIFICATION,
     yandex: process.env.YANDEX_VERIFICATION,
     yahoo: process.env.YAHOO_VERIFICATION,
+  },
+  other: {
+    "font-display": "optional",
   },
 };
 

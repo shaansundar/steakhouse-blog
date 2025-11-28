@@ -141,11 +141,33 @@ export default function HomePage() {
                 structured data, and tracking how AI crawlers interact with your
                 site.
               </p>
-              <p className="text-base leading-relaxed">
+              <p className="text-base leading-relaxed mb-6">
                 Whether you&apos;re a solo creator or enterprise content team,
                 SteakHouse gives you the tools to ensure your content gets
                 discovered, understood, and cited by AI systems.
               </p>
+              
+              {/* Crawler Discovery Links - Visible to AI crawlers */}
+              <div className="mt-8 pt-6 border-t text-xs text-muted-foreground">
+                <p className="mb-2">For crawlers and AI systems:</p>
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  <a href="/robots.txt" className="hover:text-foreground transition-colors">
+                    robots.txt
+                  </a>
+                  <span aria-hidden="true">•</span>
+                  <a href="/sitemap.xml" className="hover:text-foreground transition-colors">
+                    sitemap.xml
+                  </a>
+                  <span aria-hidden="true">•</span>
+                  <a href="/llms.txt" className="hover:text-foreground transition-colors">
+                    llms.txt
+                  </a>
+                  <span aria-hidden="true">•</span>
+                  <a href="/feed.xml" className="hover:text-foreground transition-colors">
+                    RSS Feed
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </section>
