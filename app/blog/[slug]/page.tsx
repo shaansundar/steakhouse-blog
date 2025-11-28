@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { headers } from "next/headers";
-import { getPostBySlug, getAllPosts, extractHeadings, extractFAQs, getAuthorName } from "@/lib/posts";
+import { getPostBySlug, getAllPosts, extractHeadings, extractFAQs, getAuthorName, isSteakhouseAgent } from "@/lib/posts";
 import { detectCrawler } from "@/lib/userAgent";
 import { incrementPageView, getPageViewStats, getRatingStats } from "@/lib/supabaseServer";
 import {
@@ -316,7 +316,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Meta */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <User className="h-4 w-4" />
+                  {isSteakhouseAgent(post.author) ? (
+                    <span className="text-lg">🥩</span>
+                  ) : (
+                    <User className="h-4 w-4" />
+                  )}
                   <span className="font-medium">{getAuthorName(post.author)}</span>
                 </div>
                 <Separator orientation="vertical" className="h-4" />

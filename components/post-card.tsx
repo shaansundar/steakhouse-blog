@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, User } from "lucide-react";
 import type { PostMeta } from "@/lib/posts";
-import { getAuthorName } from "@/lib/posts";
+import { getAuthorName, isSteakhouseAgent } from "@/lib/posts";
 
 interface PostCardProps {
   post: PostMeta;
@@ -63,7 +63,11 @@ export function PostCard({ post, featured = false }: PostCardProps) {
           {/* Meta */}
           <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
-              <User className="h-4 w-4" />
+              {isSteakhouseAgent(post.author) ? (
+                <span className="text-base">🥩</span>
+              ) : (
+                <User className="h-4 w-4" />
+              )}
               <span>{getAuthorName(post.author)}</span>
             </div>
             <div className="flex items-center gap-1.5">

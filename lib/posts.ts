@@ -132,6 +132,19 @@ export function getAuthorName(author: Author | string): string {
 }
 
 /**
+ * Check if author is a Steakhouse agent/automated author
+ */
+export function isSteakhouseAgent(author: Author | string): boolean {
+  const authorName = getAuthorName(author).toLowerCase();
+  return (
+    authorName.includes('steakhouse') ||
+    authorName.includes('steak house') ||
+    authorName === 'steakhouse agent' ||
+    authorName === 'steakhouse team'
+  );
+}
+
+/**
  * Get all posts with metadata, sorted by publishedAt descending
  */
 export function getAllPosts(): PostMeta[] {
