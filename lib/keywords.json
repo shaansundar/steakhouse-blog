@@ -1,0 +1,73 @@
+{
+  "primary": [
+    "generative-engine-optimization",
+    "geo",
+    "ai-seo",
+    "answer-engine-optimization",
+    "aeo",
+    "ai-content-optimization",
+    "ai-discovery",
+    "chatgpt-seo",
+    "claude-seo",
+    "ai-crawler-optimization"
+  ],
+  "secondary": [
+    "structured-data",
+    "json-ld",
+    "semantic-html",
+    "ai-citation",
+    "llm-optimization",
+    "generative-ai-seo",
+    "ai-search-optimization",
+    "content-for-ai",
+    "ai-readability",
+    "machine-readable-content"
+  ],
+  "technical": [
+    "schema-org",
+    "breadcrumb-list",
+    "faq-page",
+    "article-schema",
+    "organization-schema",
+    "howto-schema",
+    "markup",
+    "microdata",
+    "rdfa",
+    "open-graph",
+    "twitter-cards",
+    "meta-tags"
+  ],
+  "concepts": [
+    "ai-systems",
+    "language-models",
+    "llm-training",
+    "ai-crawlers",
+    "gptbot",
+    "claudebot",
+    "google-extended",
+    "perplexitybot",
+    "ai-indexing",
+    "content-attribution",
+    "ai-citation",
+    "knowledge-graph"
+  ],
+  "platforms": [
+    "steakhouse",
+    "nimbushq",
+    "content-platform",
+    "seo-tools",
+    "geo-tools",
+    "content-analysis"
+  ],
+  "phrases": [
+    "how-to-optimize-for-ai",
+    "ai-content-strategy",
+    "making-content-discoverable",
+    "ai-friendly-content",
+    "optimize-for-chatgpt",
+    "optimize-for-claude",
+    "ai-search-engine-optimization",
+    "generative-search-optimization"
+  ]
+}
+

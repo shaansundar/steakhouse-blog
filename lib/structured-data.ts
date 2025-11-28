@@ -19,15 +19,15 @@ export function generateOrganizationSchema() {
     '@type': 'Organization',
     name: 'SteakHouse',
     url: SITE_URL,
-    logo: `${SITE_URL}/logo.png`,
+    logo: `${SITE_URL}/og-default.png`,
     description: SITE_DESCRIPTION,
     sameAs: [
-      'https://twitter.com/SteakHousedev',
-      'https://github.com/SteakHouse',
+      'https://twitter.com/trysteakhouse',
+      'https://github.com/nimbushq',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
-      email: 'hello@SteakHouse.dev',
+      email: 'shaan@nimbushq.xyz',
       contactType: 'customer support',
     },
   };

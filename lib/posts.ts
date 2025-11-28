@@ -12,6 +12,7 @@ import { remark } from 'remark';
 import html from 'remark-html';
 import remarkGfm from 'remark-gfm';
 import { calculateReadingTime } from './reading-time';
+import keywordsData from './keywords.json';
 
 // Directory containing markdown posts
 const postsDirectory = path.join(process.cwd(), 'content/posts');
@@ -144,7 +145,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
   let htmlContent = processedContent.toString();
   
   // Post-process HTML to add classes and attributes
-  htmlContent = postProcessHtml(htmlContent);
+  htmlContent = postProcessHtml(htmlContent, slug);
   
   // Calculate reading time if not provided
   const readingTime = data.readingTime || calculateReadingTime(content);
@@ -167,7 +168,7 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
 /**
  * Post-process HTML to enhance semantics and SEO
  */
-function postProcessHtml(html: string): string {
+function postProcessHtml(html: string, currentSlug: string): string {
   let processed = html;
   
   // Remove H1 tags from content (page component renders H1 separately to avoid duplicates)
@@ -215,7 +216,234 @@ function postProcessHtml(html: string): string {
     }
   );
   
+  // Add internal links based on keywords and other posts
+  processed = addInternalLinks(processed, currentSlug);
+  
   return processed;
+}
+
+/**
+ * Add contextual internal links to HTML content
+ * Targets 3-10 links per 1000 words using descriptive anchor text with target keywords
+ */
+function addInternalLinks(html: string, currentSlug: string): string {
+  // Get all posts for linking opportunities
+  const allPosts = getAllPosts();
+  if (allPosts.length < 2) {
+    return html; // Need at least 2 posts to link
+  }
+  
+  // Filter out current post
+  const otherPosts = allPosts.filter(post => post.slug !== currentSlug);
+  if (otherPosts.length === 0) {
+    return html;
+  }
+  
+  // Extract text content (without HTML tags) to calculate word count
+  const textContent = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  const wordCount = textContent.split(/\s+/).length;
+  
+  // Calculate target number of links (3-10 per 1000 words)
+  const targetLinksPer1000 = 6; // Aim for middle of range
+  const targetLinks = Math.max(3, Math.min(10, Math.floor((wordCount / 1000) * targetLinksPer1000)));
+  
+  // Build keyword map from keywords.json
+  const allKeywords: string[] = [
+    ...keywordsData.primary,
+    ...keywordsData.secondary,
+    ...keywordsData.technical,
+    ...keywordsData.concepts,
+    ...keywordsData.phrases,
+  ];
+  
+  // Create a map of keywords to potential posts
+  // Match keywords to posts based on title, tags, and slug
+  const keywordToPosts = new Map<string, PostMeta[]>();
+  
+  allKeywords.forEach(keyword => {
+    const matchingPosts = otherPosts.filter(post => {
+      const searchText = `${post.title} ${post.excerpt} ${post.tags.join(' ')} ${post.slug}`.toLowerCase();
+      return searchText.includes(keyword.toLowerCase());
+    });
+    
+    if (matchingPosts.length > 0) {
+      keywordToPosts.set(keyword, matchingPosts);
+    }
+  });
+  
+  // Also create a map based on post titles and tags for better matching
+  const postMatchMap = new Map<string, PostMeta[]>();
+  otherPosts.forEach(post => {
+    // Extract key terms from post title and tags
+    const titleWords = post.title.toLowerCase().split(/\s+/);
+    const tagWords = post.tags.map(t => t.toLowerCase());
+    const slugWords = post.slug.split('-');
+    
+    const allTerms = [...titleWords, ...tagWords, ...slugWords];
+    allTerms.forEach(term => {
+      if (term.length > 3) { // Only meaningful terms
+        if (!postMatchMap.has(term)) {
+          postMatchMap.set(term, []);
+        }
+        postMatchMap.get(term)!.push(post);
+      }
+    });
+  });
+  
+  // Track links added to avoid duplicates
+  const addedLinks = new Set<string>();
+  let linksAdded = 0;
+  
+  // Find opportunities to add links in text content
+  // Look for keyword mentions that aren't already links
+  const linkPattern = /<a\s+[^>]*href[^>]*>[\s\S]*?<\/a>/gi;
+  const existingLinks: Array<{ start: number; end: number }> = [];
+  let match;
+  while ((match = linkPattern.exec(html)) !== null) {
+    existingLinks.push({ start: match.index, end: match.index + match[0].length });
+  }
+  
+  // Helper to check if a position is inside an existing link
+  const isInExistingLink = (pos: number): boolean => {
+    return existingLinks.some(link => pos >= link.start && pos <= link.end);
+  };
+  
+  // Sort keywords by relevance (longer phrases first, then by frequency)
+  const sortedKeywords = Array.from(keywordToPosts.keys()).sort((a, b) => {
+    const aPosts = keywordToPosts.get(a) || [];
+    const bPosts = keywordToPosts.get(b) || [];
+    if (a.length !== b.length) {
+      return b.length - a.length; // Longer keywords first
+    }
+    return bPosts.length - aPosts.length; // More matches first
+  });
+  
+  // Try to add links for keywords
+  for (const keyword of sortedKeywords) {
+    if (linksAdded >= targetLinks) break;
+    
+    const posts = keywordToPosts.get(keyword);
+    if (!posts || posts.length === 0) continue;
+    
+    // Use the first matching post (could be enhanced to pick best match)
+    const targetPost = posts[0];
+    const linkUrl = `/blog/${targetPost.slug}`;
+    const linkKey = `${keyword}:${linkUrl}`;
+    
+    if (addedLinks.has(linkKey)) continue;
+    
+    // Create a case-insensitive regex for the keyword
+    // Match whole words/phrases, avoiding HTML tags and existing links
+    const keywordRegex = new RegExp(`\\b(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi');
+    
+    // Find all matches
+    const matches: Array<{ index: number; length: number; text: string }> = [];
+    let regexMatch;
+    while ((regexMatch = keywordRegex.exec(html)) !== null) {
+      const matchIndex = regexMatch.index;
+      const matchLength = regexMatch[0].length;
+      
+      // Skip if inside an existing link or HTML tag
+      if (!isInExistingLink(matchIndex)) {
+        // Check if not inside an HTML tag
+        const beforeMatch = html.substring(Math.max(0, matchIndex - 50), matchIndex);
+        const afterMatch = html.substring(matchIndex + matchLength, Math.min(html.length, matchIndex + matchLength + 50));
+        
+        // Simple check: if there's a < before and > after, might be in a tag
+        const lastOpenTag = beforeMatch.lastIndexOf('<');
+        const lastCloseTag = beforeMatch.lastIndexOf('>');
+        const nextOpenTag = afterMatch.indexOf('<');
+        const nextCloseTag = afterMatch.indexOf('>');
+        
+        // If there's an unclosed tag before, skip
+        if (lastOpenTag > lastCloseTag) {
+          continue;
+        }
+        
+        matches.push({
+          index: matchIndex,
+          length: matchLength,
+          text: regexMatch[0],
+        });
+      }
+    }
+    
+    // Add link to first match (avoid over-linking)
+    if (matches.length > 0 && !addedLinks.has(linkKey)) {
+      const firstMatch = matches[0];
+      const beforeLink = html.substring(0, firstMatch.index);
+      const matchedText = html.substring(firstMatch.index, firstMatch.index + firstMatch.length);
+      const afterLink = html.substring(firstMatch.index + firstMatch.length);
+      
+      // Create descriptive anchor text using the keyword
+      const anchorText = matchedText;
+      const linkHtml = `<a href="${linkUrl}" class="internal-link" title="${targetPost.title}">${anchorText}</a>`;
+      
+      html = beforeLink + linkHtml + afterLink;
+      addedLinks.add(linkKey);
+      linksAdded++;
+      
+      // Update existing links positions (shift by link length difference)
+      const lengthDiff = linkHtml.length - firstMatch.length;
+      for (let i = 0; i < existingLinks.length; i++) {
+        if (existingLinks[i].start > firstMatch.index) {
+          existingLinks[i].start += lengthDiff;
+          existingLinks[i].end += lengthDiff;
+        }
+      }
+    }
+  }
+  
+  // If we haven't reached target links, try matching based on post titles/tags
+  if (linksAdded < targetLinks) {
+    // Extract text nodes and look for post title/tag mentions
+    for (const post of otherPosts.slice(0, Math.min(5, otherPosts.length))) {
+      if (linksAdded >= targetLinks) break;
+      
+      // Look for key terms from post title
+      const titleWords = post.title.split(/\s+/).filter(w => w.length > 4);
+      for (const word of titleWords.slice(0, 2)) { // Use first 2 meaningful words
+        if (linksAdded >= targetLinks) break;
+        
+        const wordLower = word.toLowerCase();
+        const wordRegex = new RegExp(`\\b(${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi');
+        const linkUrl = `/blog/${post.slug}`;
+        const linkKey = `${wordLower}:${linkUrl}`;
+        
+        if (addedLinks.has(linkKey)) continue;
+        
+        let regexMatch;
+        let found = false;
+        while ((regexMatch = wordRegex.exec(html)) !== null && !found) {
+          const matchIndex = regexMatch.index;
+          
+          if (!isInExistingLink(matchIndex)) {
+            const matchedText = regexMatch[0];
+            const beforeLink = html.substring(0, matchIndex);
+            const afterLink = html.substring(matchIndex + matchedText.length);
+            
+            const linkHtml = `<a href="${linkUrl}" class="internal-link" title="${post.title}">${matchedText}</a>`;
+            html = beforeLink + linkHtml + afterLink;
+            
+            addedLinks.add(linkKey);
+            linksAdded++;
+            found = true;
+            
+            // Update existing links positions
+            const lengthDiff = linkHtml.length - matchedText.length;
+            for (let i = 0; i < existingLinks.length; i++) {
+              if (existingLinks[i].start > matchIndex) {
+                existingLinks[i].start += lengthDiff;
+                existingLinks[i].end += lengthDiff;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  return html;
 }
 
 /**
@@ -372,5 +600,84 @@ export function getAllTags(): string[] {
   });
   
   return Array.from(tagSet).sort();
+}
+
+/**
+ * Generate an SEO-optimized slug from a title, incorporating keywords
+ * Uses keywords.json to enhance slug with target keywords
+ */
+export function generateSlugFromTitle(title: string): string {
+  // Convert title to lowercase and split into words
+  const words = title
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, '') // Remove special characters except hyphens
+    .trim()
+    .split(/\s+/);
+  
+  // Get all keywords for matching
+  const allKeywords: string[] = [
+    ...keywordsData.primary,
+    ...keywordsData.secondary,
+    ...keywordsData.technical,
+    ...keywordsData.concepts,
+    ...keywordsData.phrases,
+  ];
+  
+  // Check if any keywords match words in the title
+  const matchedKeywords: string[] = [];
+  const titleLower = title.toLowerCase();
+  
+  // Sort keywords by length (longer first) to match phrases first
+  const sortedKeywords = allKeywords.sort((a, b) => b.length - a.length);
+  
+  for (const keyword of sortedKeywords) {
+    const keywordLower = keyword.toLowerCase();
+    // Check if keyword appears in title (as whole word/phrase)
+    const keywordWords = keywordLower.split('-');
+    const keywordPattern = keywordWords.join('[\\s-]+');
+    const regex = new RegExp(`\\b${keywordPattern}\\b`, 'i');
+    
+    if (regex.test(titleLower) && !matchedKeywords.includes(keyword)) {
+      matchedKeywords.push(keyword);
+    }
+  }
+  
+  // Build slug: use matched keywords first, then remaining title words
+  const slugParts: string[] = [];
+  
+  // Add matched keywords (prioritize primary keywords)
+  const primaryKeywords = matchedKeywords.filter(k => keywordsData.primary.includes(k));
+  const secondaryKeywords = matchedKeywords.filter(k => !primaryKeywords.includes(k));
+  
+  slugParts.push(...primaryKeywords.slice(0, 2)); // Max 2 primary keywords
+  slugParts.push(...secondaryKeywords.slice(0, 1)); // Max 1 secondary keyword
+  
+  // Add remaining title words that aren't already covered by keywords
+  const usedWords = new Set<string>();
+  matchedKeywords.forEach(kw => {
+    kw.split('-').forEach(w => usedWords.add(w));
+  });
+  
+  words.forEach(word => {
+    if (!usedWords.has(word) && word.length > 2) { // Skip very short words
+      slugParts.push(word);
+    }
+  });
+  
+  // Join with hyphens and limit length
+  let slug = slugParts.join('-');
+  
+  // Remove consecutive hyphens
+  slug = slug.replace(/-+/g, '-');
+  
+  // Remove leading/trailing hyphens
+  slug = slug.replace(/^-+|-+$/g, '');
+  
+  // Limit to reasonable length (50-60 chars for SEO)
+  if (slug.length > 60) {
+    slug = slug.substring(0, 60).replace(/-+$/, ''); // Remove trailing hyphen if cut mid-word
+  }
+  
+  return slug;
 }
 

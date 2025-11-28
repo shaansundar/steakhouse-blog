@@ -14,54 +14,39 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         // Allow all user agents by default
+        // Allow all content (blog posts, pages) - this is the default behavior
         userAgent: "*",
         allow: "/",
         disallow: [
-          "/api/",      // Protect API routes
-          "/_next/",    // Next.js internal routes
-          "/admin/",    // Future admin routes
+          "/api/newsletter/",      // Protect newsletter API route
+          "/_next/",                // Next.js internal routes
+          "/admin/",                // Future admin routes
+          "/private/",              // Private content
         ],
       },
       {
-        // Explicitly allow AI crawlers (for clarity and documentation)
-        // GPTBot - OpenAI's crawler for ChatGPT
-        userAgent: "GPTBot",
-        allow: "/",
-      },
-      {
-        // ChatGPT-User - Direct ChatGPT browsing
-        userAgent: "ChatGPT-User",
-        allow: "/",
-      },
-      {
-        // Google-Extended - Google's AI training crawler
-        userAgent: "Google-Extended",
-        allow: "/",
-      },
-      {
-        // ClaudeBot - Anthropic's crawler
-        userAgent: "ClaudeBot",
-        allow: "/",
-      },
-      {
-        // Claude-Web - Claude's browsing feature
-        userAgent: "Claude-Web",
-        allow: "/",
-      },
-      {
-        // CCBot - Common Crawl (used by many AI systems)
-        userAgent: "CCBot",
-        allow: "/",
-      },
-      {
-        // PerplexityBot - Perplexity AI's crawler
-        userAgent: "PerplexityBot",
-        allow: "/",
-      },
-      {
-        // Meta-ExternalAgent - Meta's AI crawler
-        userAgent: "Meta-ExternalAgent",
-        allow: "/",
+        // Explicitly allow AI crawlers and ensure they have access
+        // Grouping them for cleaner configuration
+        userAgent: [
+          "GPTBot",
+          "ChatGPT-User", 
+          "Google-Extended",
+          "ClaudeBot",
+          "Claude-Web",
+          "CCBot",
+          "PerplexityBot",
+          "Meta-ExternalAgent",
+          "Amazonbot",
+          "Applebot",
+        ],
+        allow: "/", // Allow all content including blog posts
+        // Disallow API/internal routes to prevent unnecessary crawling
+        disallow: [
+          "/api/newsletter/",
+          "/_next/",
+          "/admin/",
+          "/private/",
+        ],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
