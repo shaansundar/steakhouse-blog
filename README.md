@@ -79,10 +79,10 @@ Blog posts are Markdown files in the `content/posts` directory.
 ### File Naming Convention
 
 ```
-YYYY-MM-DD--slug-for-your-post.md
+slug-for-your-post.md
 ```
 
-Example: `2025-11-28--what-is-generative-engine-optimization.md`
+Example: `what-is-generative-engine-optimization.md`
 
 ### Frontmatter Schema
 

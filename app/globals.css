@@ -319,6 +319,54 @@
   margin: 3rem 0;
 }
 
+/* Table styling */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 2rem 0;
+  font-size: 0.95rem;
+}
+
+.prose table thead {
+  border-bottom: 1px solid var(--border);
+}
+
+.prose table tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s ease;
+}
+
+.prose table tbody tr:hover {
+  background-color: var(--muted);
+}
+
+.prose table tbody tr:last-child {
+  border-bottom: 0;
+}
+
+.prose table th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--muted-foreground);
+  vertical-align: middle;
+}
+
+.prose table td {
+  padding: 1rem;
+  vertical-align: middle;
+}
+
+.prose table tfoot {
+  border-top: 1px solid var(--border);
+  background-color: var(--muted);
+  font-weight: 500;
+}
+
+.prose table tfoot tr:last-child {
+  border-bottom: 0;
+}
+
 /* TL;DR section styling */
 .prose .tldr {
   background: linear-gradient(135deg, var(--accent) 0%, var(--secondary) 100%);
@@ -341,6 +389,59 @@
 
 .prose .faq-section h3:first-child {
   margin-top: 0;
+}
+
+/* FAQ answer markdown styling */
+.prose-xs {
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.prose-xs p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  font-size: 0.75rem;
+}
+
+.prose-xs p:first-child {
+  margin-top: 0;
+}
+
+.prose-xs p:last-child {
+  margin-bottom: 0;
+}
+
+.prose-xs strong {
+  font-weight: 600;
+  color: var(--foreground);
+  font-size: 0.75rem;
+}
+
+.prose-xs ul,
+.prose-xs ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-left: 1rem;
+  font-size: 0.75rem;
+}
+
+.prose-xs li {
+  margin-bottom: 0.25rem;
+}
+
+.prose-xs a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-size: 0.75rem;
+}
+
+.prose-xs code {
+  font-family: var(--font-mono);
+  font-size: 0.7em;
+  background-color: var(--muted);
+  padding: 0.1em 0.25em;
+  border-radius: 3px;
 }
 
 /* Key takeaways styling */

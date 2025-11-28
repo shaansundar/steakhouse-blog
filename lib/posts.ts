@@ -27,6 +27,7 @@ export interface Author {
 export interface FAQ {
   question: string;
   answer: string;
+  answerHtml?: string; // Processed HTML version of answer
 }
 
 // Post metadata interface
@@ -51,20 +52,11 @@ export interface Post extends PostMeta {
 
 /**
  * Extract slug from filename
- * Filename format: YYYY-MM-DD--slug.md
+ * Filename format: slug.md (no date prefix)
  */
 function extractSlugFromFilename(filename: string): string {
   // Remove .md extension
-  const withoutExt = filename.replace(/\.md$/, '');
-  
-  // Check for YYYY-MM-DD-- prefix and extract slug
-  const match = withoutExt.match(/^\d{4}-\d{2}-\d{2}--(.+)$/);
-  if (match) {
-    return match[1];
-  }
-  
-  // Fallback to full filename without extension
-  return withoutExt;
+  return filename.replace(/\.md$/, '');
 }
 
 /**
@@ -395,8 +387,66 @@ function postProcessHtml(html: string, currentSlug: string): string {
     }
   );
   
+  // Process tables to add shadcn table classes
+  processed = processTables(processed);
+  
   // Add internal links based on keywords and other posts
   processed = addInternalLinks(processed, currentSlug);
+  
+  return processed;
+}
+
+/**
+ * Process HTML tables to add shadcn table styling
+ */
+function processTables(html: string): string {
+  // Match table elements and add shadcn classes
+  let processed = html;
+  
+  // Wrap tables in a container with overflow handling
+  processed = processed.replace(
+    /<table([^>]*)>/g,
+    '<div class="my-6 overflow-x-auto"><table$1 class="w-full caption-bottom text-sm border-collapse">'
+  );
+  
+  // Close the wrapper div after table
+  processed = processed.replace(/<\/table>/g, '</table></div>');
+  
+  // Style table header
+  processed = processed.replace(
+    /<thead([^>]*)>/g,
+    '<thead$1 class="[&_tr]:border-b">'
+  );
+  
+  // Style table body
+  processed = processed.replace(
+    /<tbody([^>]*)>/g,
+    '<tbody$1 class="[&_tr:last-child]:border-0">'
+  );
+  
+  // Style table footer
+  processed = processed.replace(
+    /<tfoot([^>]*)>/g,
+    '<tfoot$1 class="border-t bg-muted/50 font-medium [&>tr]:last:border-b-0">'
+  );
+  
+  // Style table rows
+  processed = processed.replace(
+    /<tr([^>]*)>/g,
+    '<tr$1 class="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">'
+  );
+  
+  // Style table header cells
+  processed = processed.replace(
+    /<th([^>]*)>/g,
+    '<th$1 class="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">'
+  );
+  
+  // Style table data cells
+  processed = processed.replace(
+    /<td([^>]*)>/g,
+    '<td$1 class="p-4 align-middle [&:has([role=checkbox])]:pr-0">'
+  );
   
   return processed;
 }
@@ -626,14 +676,40 @@ function addInternalLinks(html: string, currentSlug: string): string {
 }
 
 /**
+ * Process FAQ answer markdown to HTML
+ */
+async function processFAQAnswer(markdown: string): Promise<string> {
+  try {
+    const processedContent = await remark()
+      .use(remarkGfm)
+      .use(html, { 
+        sanitize: false, // We trust our own content
+      })
+      .process(markdown);
+    
+    return processedContent.toString();
+  } catch (error) {
+    console.error('Error processing FAQ answer markdown:', error);
+    return markdown; // Fallback to plain text
+  }
+}
+
+/**
  * Extract FAQs from markdown content
  * First checks frontmatter faq field, then falls back to content extraction
  * Looks for FAQ sections with H3 headings as questions and following paragraphs as answers
  */
-export function extractFAQs(content: string, frontmatterFaq?: FAQ[]): FAQ[] {
+export async function extractFAQs(content: string, frontmatterFaq?: FAQ[]): Promise<FAQ[]> {
   // If FAQs are provided in frontmatter, use those first (more reliable)
   if (frontmatterFaq && frontmatterFaq.length > 0) {
-    return frontmatterFaq;
+    // Process markdown in FAQ answers
+    const processedFAQs = await Promise.all(
+      frontmatterFaq.map(async (faq) => ({
+        ...faq,
+        answerHtml: await processFAQAnswer(faq.answer),
+      }))
+    );
+    return processedFAQs;
   }
   
   const faqs: FAQ[] = [];
@@ -687,9 +763,11 @@ export function extractFAQs(content: string, frontmatterFaq?: FAQ[]): FAQ[] {
             .trim();
           
           if (cleanAnswer.length > 10) {
+            const answerHtml = await processFAQAnswer(cleanAnswer);
             faqs.push({
               question: currentQuestion,
               answer: cleanAnswer,
+              answerHtml,
             });
           }
         }
@@ -719,9 +797,11 @@ export function extractFAQs(content: string, frontmatterFaq?: FAQ[]): FAQ[] {
         .trim();
       
       if (cleanAnswer.length > 10) {
+        const answerHtml = await processFAQAnswer(cleanAnswer);
         faqs.push({
           question: currentQuestion,
           answer: cleanAnswer,
+          answerHtml,
         });
       }
     }

@@ -8,6 +8,7 @@ import { HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 interface FAQ {
   question: string;
   answer: string;
+  answerHtml?: string;
 }
 
 interface PostFAQProps {
@@ -27,7 +28,7 @@ export function PostFAQ({ faqs, title = "Frequently Asked Questions" }: PostFAQP
   }
 
   return (
-    <Card>
+    <Card id="frequently-asked-questions">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <HelpCircle className="h-5 w-5 text-primary" />
@@ -40,9 +41,16 @@ export function PostFAQ({ faqs, title = "Frequently Asked Questions" }: PostFAQP
             <div key={index}>
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full text-left py-3 flex items-start justify-between gap-4 hover:bg-muted/50 rounded-md px-2 -mx-2 transition-colors group"
+                className="w-full text-left py-3 flex items-start justify-between gap-4 hover:bg-muted/50 rounded-md px-2 -mx-2 transition-colors group scroll-mt-24"
                 aria-expanded={openIndex === index}
                 aria-controls={`faq-answer-${index}`}
+                id={(() => {
+                  const questionSlug = faq.question
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-|-$/g, '');
+                  return questionSlug || `faq-${index}`;
+                })()}
               >
                 <h3 className="font-medium text-sm group-hover:text-primary transition-colors flex-1">
                   {faq.question}
@@ -56,10 +64,11 @@ export function PostFAQ({ faqs, title = "Frequently Asked Questions" }: PostFAQP
               {openIndex === index && (
                 <div
                   id={`faq-answer-${index}`}
-                  className="px-2 pb-3 text-sm text-muted-foreground leading-relaxed"
-                >
-                  {faq.answer}
-                </div>
+                  className="px-2 pb-3 text-xs text-muted-foreground leading-relaxed prose prose-xs max-w-none"
+                  dangerouslySetInnerHTML={{ 
+                    __html: faq.answerHtml || faq.answer 
+                  }}
+                />
               )}
               {index < faqs.length - 1 && <Separator className="my-0" />}
             </div>

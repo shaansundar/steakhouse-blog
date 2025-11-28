@@ -20,6 +20,7 @@ import { CrawlerStats } from "@/components/crawler-stats";
 import { MobileTOC } from "@/components/mobile-toc";
 import { PostFAQ } from "@/components/post-faq";
 import { ArticleRating } from "@/components/article-rating";
+import { MarkdownContent } from "@/components/markdown-content";
 import {
   Calendar,
   Clock,
@@ -165,7 +166,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const headings = extractHeadings(post.rawContent);
   
   // Extract FAQs from frontmatter first, then fall back to content extraction
-  const faqs = extractFAQs(post.rawContent, post.faq);
+  const faqs = await extractFAQs(post.rawContent, post.faq);
 
   // Get related posts (same tags, different slug)
   const allPosts = getAllPosts();
@@ -345,10 +346,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <Separator className="mb-8" />
 
             {/* Article Body */}
-            <div
-              className="prose max-w-none"
-              dangerouslySetInnerHTML={{ __html: post.content }}
-            />
+            <MarkdownContent html={post.content} />
 
             {/* Mobile Table of Contents - Inserted after TL;DR via client component */}
             {headings.length > 0 && <MobileTOC headings={headings} />}
