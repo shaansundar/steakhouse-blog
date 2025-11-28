@@ -4,7 +4,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { getPostBySlug, getAllPosts, extractHeadings, extractFAQs, getAuthorName } from "@/lib/posts";
 import { detectCrawler } from "@/lib/userAgent";
-import { incrementPageView, getPageViewStats } from "@/lib/supabaseServer";
+import { incrementPageView, getPageViewStats, getRatingStats } from "@/lib/supabaseServer";
 import {
   generateBlogPostingSchema,
   generateBreadcrumbSchema,
@@ -19,6 +19,7 @@ import { ViewCount } from "@/components/view-count";
 import { CrawlerStats } from "@/components/crawler-stats";
 import { MobileTOC } from "@/components/mobile-toc";
 import { PostFAQ } from "@/components/post-faq";
+import { ArticleRating } from "@/components/article-rating";
 import {
   Calendar,
   Clock,
@@ -26,6 +27,7 @@ import {
   ChevronLeft,
   ArrowRight,
   ListTree,
+  Star,
 } from "lucide-react";
 
 // Force SSR - no static generation
@@ -156,6 +158,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     crawlers_viewed: 0,
   }));
 
+  // Get rating stats (non-blocking - fetch in parallel)
+  const ratingStatsPromise = getRatingStats(post.slug).catch(() => null);
+
   // Extract headings for table of contents
   const headings = extractHeadings(post.rawContent);
   
@@ -203,8 +208,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     ...(faqSchema ? [faqSchema] : []),
   ];
 
-  // Await view stats (non-blocking promise)
-  const viewStats = await viewStatsPromise;
+      // Await view stats and rating stats (non-blocking promises)
+      const viewStats = await viewStatsPromise;
+      const ratingStats = await ratingStatsPromise;
 
   return (
     <>
@@ -272,6 +278,32 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <p className="text-lg lg:text-xl text-muted-foreground mb-6 leading-relaxed">
                     {post.description}
                   </p>
+
+              {/* Rating Display - Prominently displayed */}
+              {ratingStats && ratingStats.total_ratings > 0 && (
+                <div className="mb-6 flex items-center gap-3 p-4 bg-muted/30 rounded-lg border">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <Star
+                        key={star}
+                        className={`h-5 w-5 ${
+                          star <= Math.round(ratingStats.average_rating)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "fill-muted text-muted-foreground"
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-xl font-bold">
+                      {ratingStats.average_rating.toFixed(1)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">
+                      from {ratingStats.total_ratings.toLocaleString()} {ratingStats.total_ratings === 1 ? "review" : "reviews"}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Meta */}
               <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
@@ -407,6 +439,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
               {/* FAQ Section */}
               {faqs.length > 0 && <PostFAQ faqs={faqs} />}
+
+              {/* Article Rating */}
+              <ArticleRating slug={post.slug} initialStats={ratingStats} />
 
               {/* Crawler Statistics */}
               <CrawlerStats slug={post.slug} />
