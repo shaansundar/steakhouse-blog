@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { NewsletterForm } from "@/components/newsletter-form";
+import { HomepageFAQ } from "@/components/homepage-faq";
 import {
   Sparkles,
   TrendingUp,
@@ -79,7 +80,7 @@ export function Sidebar() {
           </Button>
         </div>
       </Card>
-
+      <HomepageFAQ />
       {/* Why SteakHouse */}
       <Card>
         <CardHeader className="pb-3">
@@ -128,41 +129,7 @@ export function Sidebar() {
         </CardContent>
       </Card>
 
-      {/* FAQ Preview */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-base">
-            <Zap className="h-5 w-5 text-primary" />
-            Quick Answers
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="pt-0 space-y-4">
-          <div>
-            <h3 className="font-medium text-sm">What is GEO?</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Generative Engine Optimization is the practice of optimizing
-              content for AI systems like ChatGPT and Claude, not just
-              traditional search engines.
-            </p>
-          </div>
-          <Separator />
-          <div>
-            <h3 className="font-medium text-sm">How is GEO different from SEO?</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              SEO focuses on ranking in search results. GEO focuses on being
-              cited and referenced in AI-generated answers.
-            </p>
-          </div>
-          <Separator />
-          <div>
-            <h3 className="font-medium text-sm">Does SteakHouse work with any CMS?</h3>
-            <p className="text-xs text-muted-foreground mt-1">
-              Yes. SteakHouse integrates with major CMSs and works with any
-              web-based content through our API and browser extension.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* SEO/GEO Analytics FAQ - Only visible on homepage */}
 
       {/* Popular Tags */}
       <Card>

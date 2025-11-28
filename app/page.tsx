@@ -2,10 +2,12 @@ import { Metadata } from "next";
 import { getAllPosts } from "@/lib/posts";
 import { PostCard } from "@/components/post-card";
 import { Sidebar } from "@/components/sidebar";
+import { homepageFAQData } from "@/lib/homepage-faq-data";
 import {
   generateWebsiteSchema,
   generateOrganizationSchema,
   generateBlogListSchema,
+  generateFAQSchema,
   renderJsonLd,
 } from "@/lib/structured-data";
 
@@ -37,6 +39,14 @@ export default function HomePage() {
   const websiteSchema = generateWebsiteSchema();
   const organizationSchema = generateOrganizationSchema();
   const blogListSchema = generateBlogListSchema(posts);
+  
+  // Generate FAQ schema for homepage SEO/GEO
+  const faqSchema = generateFAQSchema(
+    homepageFAQData.map(faq => ({
+      question: faq.question,
+      answer: faq.answer,
+    }))
+  );
 
   return (
     <>
@@ -44,7 +54,7 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: renderJsonLd([websiteSchema, organizationSchema, blogListSchema]),
+          __html: renderJsonLd([websiteSchema, organizationSchema, blogListSchema, faqSchema]),
         }}
       />
 
@@ -66,8 +76,14 @@ export default function HomePage() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          {/* Blog Posts - Bento Grid */}
-          <section className="lg:col-span-8" aria-label="Blog posts">
+          {/* Sidebar */}
+          <div className="lg:col-span-4 lg:order-2">
+            <div className="lg:sticky lg:top-24">
+              <Sidebar />
+            </div>
+          </div>
+          {/* Blog Posts */}
+          <section className="lg:col-span-8 lg:order-1" aria-label="Blog posts">
             {posts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
@@ -100,13 +116,6 @@ export default function HomePage() {
               </div>
             )}
           </section>
-
-          {/* Sidebar */}
-          <div className="lg:col-span-4">
-            <div className="lg:sticky lg:top-24">
-              <Sidebar />
-            </div>
-          </div>
         </div>
 
         {/* About Section (for SEO/GEO) */}

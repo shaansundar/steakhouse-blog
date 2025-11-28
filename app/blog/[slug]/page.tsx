@@ -17,6 +17,7 @@ import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { ViewCount } from "@/components/view-count";
 import { CrawlerStats } from "@/components/crawler-stats";
+import { MobileTOC } from "@/components/mobile-toc";
 import {
   Calendar,
   Clock,
@@ -303,6 +304,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
 
+            {/* Mobile Table of Contents - Inserted after TL;DR via client component */}
+            {headings.length > 0 && <MobileTOC headings={headings} />}
+
             <Separator className="my-12" />
 
             {/* Related Posts */}
@@ -354,9 +358,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           {/* Sidebar */}
           <aside className="lg:col-span-4">
             <div className="lg:sticky lg:top-24 space-y-6">
-              {/* Table of Contents */}
+              {/* Table of Contents - Desktop only */}
               {headings.length > 0 && (
-                <Card>
+                <Card className="hidden lg:block">
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <ListTree className="h-5 w-5 text-primary" />
