@@ -54,3 +54,26 @@ export default function robots(): MetadataRoute.Robots {
   };
 }
 
+/**
+ * IMPORTANT: To ensure AI crawlers discover your site:
+ * 
+ * 1. Submit sitemap to Google Search Console:
+ *    - Go to https://search.google.com/search-console
+ *    - Add property: ${SITE_URL}
+ *    - Submit sitemap: ${SITE_URL}/sitemap.xml
+ * 
+ * 2. Submit sitemap to Bing Webmaster Tools:
+ *    - Go to https://www.bing.com/webmasters
+ *    - Add site and submit sitemap
+ * 
+ * 3. Verify site is crawlable:
+ *    - Test robots.txt: ${SITE_URL}/robots.txt
+ *    - Test sitemap: ${SITE_URL}/sitemap.xml
+ *    - Test llms.txt: ${SITE_URL}/llms.txt
+ * 
+ * 4. For AI-specific discovery:
+ *    - Ensure llms.txt is accessible: ${SITE_URL}/llms.txt
+ *    - Verify structured data with Google Rich Results Test
+ *    - Monitor AI crawler visits in your analytics
+ */
+

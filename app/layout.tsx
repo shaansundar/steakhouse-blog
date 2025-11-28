@@ -55,9 +55,11 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    nocache: false,
     googleBot: {
       index: true,
       follow: true,
+      noimageindex: false,
       "max-video-preview": -1,
       "max-image-preview": "large",
       "max-snippet": -1,
@@ -90,9 +92,14 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: SITE_URL,
+    types: {
+      "application/rss+xml": [{ url: `${SITE_URL}/feed.xml`, title: "SteakHouse Blog RSS Feed" }],
+    },
   },
   verification: {
     google: process.env.GOOGLE_SITE_VERIFICATION,
+    yandex: process.env.YANDEX_VERIFICATION,
+    yahoo: process.env.YAHOO_VERIFICATION,
   },
 };
 

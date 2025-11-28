@@ -84,6 +84,19 @@ export async function generateMetadata({
     title: seoTitle,
     description: metaDescription,
     authors: [{ name: post.author }],
+    robots: {
+      index: true,
+      follow: true,
+      nocache: false,
+      googleBot: {
+        index: true,
+        follow: true,
+        noimageindex: false,
+        "max-video-preview": -1,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
+    },
     // Preload fonts for faster LCP
     other: {
       "font-display": "optional",
