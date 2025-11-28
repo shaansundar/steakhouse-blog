@@ -54,8 +54,9 @@ export async function generateMetadata({
   // Ensure meta description is optimal length (120-160 chars)
   let metaDescription = post.excerpt;
   if (metaDescription.length < 120) {
-    // Extend with more context if too short
-    metaDescription = `${post.excerpt} Learn more about ${post.tags[0] || 'content optimization'} and discover best practices.`;
+    // Extend with more context if too short - use natural language, avoid keyword stuffing
+    const tag = post.tags[0] || 'content strategy';
+    metaDescription = `${post.excerpt} Discover insights and practical guidance for modern content creators.`;
   }
   if (metaDescription.length > 160) {
     // Truncate to 160 chars at word boundary

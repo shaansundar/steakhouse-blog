@@ -37,15 +37,6 @@ export const metadata: Metadata = {
   },
   description:
     "Master Generative Engine Optimization (GEO) and AI-driven content strategy. Expert insights on making your content discoverable by ChatGPT, Claude, and other AI systems.",
-  keywords: [
-    "GEO",
-    "Generative Engine Optimization",
-    "AI SEO",
-    "AEO",
-    "Content Optimization",
-    "AI Discovery",
-    "ChatGPT SEO",
-  ],
   authors: [{ name: "SteakHouse Team" }],
   creator: "SteakHouse",
   publisher: "SteakHouse",
