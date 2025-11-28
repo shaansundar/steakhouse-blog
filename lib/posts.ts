@@ -301,15 +301,97 @@ function postProcessHtml(html: string, currentSlug: string): string {
     }
   );
   
-  // Ensure FAQ headings have proper IDs for anchor links
+  // Add IDs to all headings (H2, H3, H4) for anchor links
+  // This must match the ID generation logic in extractHeadings()
+  const idCounts: Record<string, number> = {};
+  
+  // Process H2 headings
   processed = processed.replace(
-    /<h3[^>]*>(.+?)<\/h3>/g,
-    (match, content) => {
-      const id = content
+    /<h2([^>]*)>(.+?)<\/h2>/g,
+    (match, attrs, content) => {
+      // Skip if already has an id attribute
+      if (/id\s*=/i.test(attrs)) {
+        return match;
+      }
+      
+      // Extract text content (remove HTML tags)
+      const textContent = content.replace(/<[^>]+>/g, '').trim();
+      let baseId = textContent
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '');
-      return `<h3 id="${id}">${content}</h3>`;
+      
+      // Handle empty IDs
+      if (!baseId) {
+        baseId = `heading-${Object.keys(idCounts).length}`;
+      }
+      
+      // Ensure unique IDs by appending a counter if duplicate
+      const count = idCounts[baseId] || 0;
+      idCounts[baseId] = count + 1;
+      const id = count > 0 ? `${baseId}-${count}` : baseId;
+      
+      return `<h2${attrs} id="${id}">${content}</h2>`;
+    }
+  );
+  
+  // Process H3 headings
+  processed = processed.replace(
+    /<h3([^>]*)>(.+?)<\/h3>/g,
+    (match, attrs, content) => {
+      // Skip if already has an id attribute
+      if (/id\s*=/i.test(attrs)) {
+        return match;
+      }
+      
+      // Extract text content (remove HTML tags)
+      const textContent = content.replace(/<[^>]+>/g, '').trim();
+      let baseId = textContent
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      
+      // Handle empty IDs
+      if (!baseId) {
+        baseId = `heading-${Object.keys(idCounts).length}`;
+      }
+      
+      // Ensure unique IDs by appending a counter if duplicate
+      const count = idCounts[baseId] || 0;
+      idCounts[baseId] = count + 1;
+      const id = count > 0 ? `${baseId}-${count}` : baseId;
+      
+      return `<h3${attrs} id="${id}">${content}</h3>`;
+    }
+  );
+  
+  // Process H4 headings
+  processed = processed.replace(
+    /<h4([^>]*)>(.+?)<\/h4>/g,
+    (match, attrs, content) => {
+      // Skip if already has an id attribute
+      if (/id\s*=/i.test(attrs)) {
+        return match;
+      }
+      
+      // Extract text content (remove HTML tags)
+      const textContent = content.replace(/<[^>]+>/g, '').trim();
+      let baseId = textContent
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+      
+      // Handle empty IDs
+      if (!baseId) {
+        baseId = `heading-${Object.keys(idCounts).length}`;
+      }
+      
+      // Ensure unique IDs by appending a counter if duplicate
+      const count = idCounts[baseId] || 0;
+      idCounts[baseId] = count + 1;
+      const id = count > 0 ? `${baseId}-${count}` : baseId;
+      
+      return `<h4${attrs} id="${id}">${content}</h4>`;
     }
   );
   

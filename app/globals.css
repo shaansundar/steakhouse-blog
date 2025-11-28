@@ -358,6 +358,14 @@
 /* Smooth scroll for anchor links */
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 6rem; /* Account for sticky header */
+}
+
+/* Add scroll margin to headings for better anchor link navigation */
+.prose h2,
+.prose h3,
+.prose h4 {
+  scroll-margin-top: 6rem; /* Account for sticky header */
 }
 
 /* Focus visible for accessibility */
