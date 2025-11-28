@@ -270,16 +270,24 @@ function postProcessHtml(html: string, currentSlug: string): string {
     '<a href="$1" target="_blank" rel="noopener noreferrer">'
   );
   
-  // Wrap TL;DR sections
+  // Wrap TL;DR sections - handle various formats and case variations
+  // Format 1: <p><strong>TL;DR:</strong> or <p><strong>Tl;Dr:</strong> etc. followed by content</p>
+  // This handles the entire paragraph containing TL;DR
   processed = processed.replace(
-    /<p><strong>TL;DR:?<\/strong>(.+?)<\/p>/gi,
-    '<div class="tldr"><p><strong>TL;DR:</strong>$1</p></div>'
+    /<p><strong>(Tl?;?Dr?:?\s*:?\s*)<\/strong>([\s\S]*?)<\/p>/gi,
+    (match, tldrLabel, content) => {
+      // Only wrap if not already wrapped
+      if (!match.includes('class="tldr"')) {
+        return `<div class="tldr"><p><strong>TL;DR:</strong>${content}</p></div>`;
+      }
+      return match;
+    }
   );
   
-  // Alternative TL;DR format: ## TL;DR or ### TL;DR
+  // Format 2: ## TL;DR or ### TL;DR followed by paragraph
   processed = processed.replace(
-    /<h[23]>TL;DR:?<\/h[23]>\s*<p>(.+?)<\/p>/gi,
-    '<div class="tldr"><p><strong>TL;DR:</strong> $1</p></div>'
+    /<h[23]>(Tl?;?Dr?:?\s*:?\s*)<\/h[23]>\s*<p>([\s\S]*?)<\/p>/gi,
+    '<div class="tldr"><p><strong>TL;DR:</strong> $2</p></div>'
   );
   
   // Add semantic markup to FAQ sections
@@ -454,6 +462,7 @@ function processTables(html: string): string {
 /**
  * Add contextual internal links to HTML content
  * Targets 3-10 links per 1000 words using descriptive anchor text with target keywords
+ * Excludes TL;DR sections and other protected content
  */
 function addInternalLinks(html: string, currentSlug: string): string {
   // Get all posts for linking opportunities
@@ -468,8 +477,50 @@ function addInternalLinks(html: string, currentSlug: string): string {
     return html;
   }
   
+  // Extract TL;DR sections and other protected content to exclude from linking
+  const tldrSections: Array<{ start: number; end: number; content: string }> = [];
+  const tldrRegex = /<div class="tldr">[\s\S]*?<\/div>/gi;
+  let tldrMatch;
+  while ((tldrMatch = tldrRegex.exec(html)) !== null) {
+    tldrSections.push({
+      start: tldrMatch.index,
+      end: tldrMatch.index + tldrMatch[0].length,
+      content: tldrMatch[0],
+    });
+  }
+  
+  // Extract heading sections (h1-h6) to exclude from linking
+  const headingSections: Array<{ start: number; end: number; content: string }> = [];
+  const headingRegex = /<h[1-6][^>]*>[\s\S]*?<\/h[1-6]>/gi;
+  let headingMatch;
+  while ((headingMatch = headingRegex.exec(html)) !== null) {
+    headingSections.push({
+      start: headingMatch.index,
+      end: headingMatch.index + headingMatch[0].length,
+      content: headingMatch[0],
+    });
+  }
+  
+  // Helper to check if a position is inside a TL;DR section
+  const isInTldrSection = (pos: number): boolean => {
+    return tldrSections.some(section => pos >= section.start && pos <= section.end);
+  };
+  
+  // Helper to check if a position is inside a heading
+  const isInHeading = (pos: number): boolean => {
+    return headingSections.some(section => pos >= section.start && pos <= section.end);
+  };
+  
   // Extract text content (without HTML tags) to calculate word count
-  const textContent = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  // Exclude TL;DR sections and headings from word count
+  let textContent = html;
+  tldrSections.forEach(section => {
+    textContent = textContent.replace(section.content, ' ');
+  });
+  headingSections.forEach(section => {
+    textContent = textContent.replace(section.content, ' ');
+  });
+  textContent = textContent.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
   const wordCount = textContent.split(/\s+/).length;
   
   // Calculate target number of links (3-10 per 1000 words)
@@ -490,9 +541,16 @@ function addInternalLinks(html: string, currentSlug: string): string {
   const keywordToPosts = new Map<string, PostMeta[]>();
   
   allKeywords.forEach(keyword => {
+    // Skip slug-like keywords (long hyphenated patterns) from being matched
+    if (keyword.includes('-') && keyword.split('-').length > 3) {
+      return; // Skip very long hyphenated keywords that look like slugs
+    }
+    
     const matchingPosts = otherPosts.filter(post => {
-      const searchText = `${post.title} ${post.description} ${post.tags.join(' ')} ${post.slug}`.toLowerCase();
-      return searchText.includes(keyword.toLowerCase());
+      // Don't match against slugs - they're too specific and cause false matches
+      const searchText = `${post.title} ${post.description} ${post.tags.join(' ')}`.toLowerCase();
+      const keywordLower = keyword.toLowerCase();
+      return searchText.includes(keywordLower);
     });
     
     if (matchingPosts.length > 0) {
@@ -503,13 +561,18 @@ function addInternalLinks(html: string, currentSlug: string): string {
   // Also create a map based on post titles and tags for better matching
   const postMatchMap = new Map<string, PostMeta[]>();
   otherPosts.forEach(post => {
-    // Extract key terms from post title and tags
-    const titleWords = post.title.toLowerCase().split(/\s+/);
-    const tagWords = post.tags.map(t => t.toLowerCase());
-    const slugWords = post.slug.split('-');
+    // Extract key terms from post title and tags (but NOT slugs - they're too specific)
+    const titleWords = post.title.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+    const tagWords = post.tags.map(t => t.toLowerCase()).filter(t => t.length > 3);
     
-    const allTerms = [...titleWords, ...tagWords, ...slugWords];
+    // Only use meaningful words from title, not the full slug
+    const allTerms = [...titleWords, ...tagWords];
     allTerms.forEach(term => {
+      // Skip slug-like patterns (long hyphenated terms)
+      if (term.includes('-') && term.split('-').length > 2) {
+        return;
+      }
+      
       if (term.length > 3) { // Only meaningful terms
         if (!postMatchMap.has(term)) {
           postMatchMap.set(term, []);
@@ -532,9 +595,21 @@ function addInternalLinks(html: string, currentSlug: string): string {
     existingLinks.push({ start: match.index, end: match.index + match[0].length });
   }
   
-  // Helper to check if a position is inside an existing link
+  // Also track TL;DR sections and headings as protected areas
+  const protectedSections = [
+    ...existingLinks, 
+    ...tldrSections.map(s => ({ start: s.start, end: s.end })),
+    ...headingSections.map(s => ({ start: s.start, end: s.end }))
+  ];
+  
+  // Helper to check if a position is inside an existing link or protected section
   const isInExistingLink = (pos: number): boolean => {
     return existingLinks.some(link => pos >= link.start && pos <= link.end);
+  };
+  
+  // Helper to check if a position is inside a protected section (link, TL;DR, or heading)
+  const isInProtectedSection = (pos: number): boolean => {
+    return protectedSections.some(section => pos >= section.start && pos <= section.end);
   };
   
   // Sort keywords by relevance (longer phrases first, then by frequency)
@@ -563,36 +638,102 @@ function addInternalLinks(html: string, currentSlug: string): string {
     
     // Create a case-insensitive regex for the keyword
     // Match whole words/phrases, avoiding HTML tags and existing links
-    const keywordRegex = new RegExp(`\\b(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})\\b`, 'gi');
+    // Escape special regex characters in keyword
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Use word boundaries but handle hyphens in keywords
+    const keywordPattern = keyword.includes('-') 
+      ? `(?:^|[^\\w-])(${escapedKeyword})(?=[^\\w-]|$)` 
+      : `\\b(${escapedKeyword})\\b`;
+    const keywordRegex = new RegExp(keywordPattern, 'gi');
     
     // Find all matches
-    const matches: Array<{ index: number; length: number; text: string }> = [];
+    const matches: Array<{ index: number; length: number; text: string; fullMatch: string }> = [];
     let regexMatch;
+    let lastIndex = 0;
+    
+    // Reset regex lastIndex to avoid infinite loops
+    keywordRegex.lastIndex = 0;
+    
     while ((regexMatch = keywordRegex.exec(html)) !== null) {
-      const matchIndex = regexMatch.index;
-      const matchLength = regexMatch[0].length;
+      // Prevent infinite loops
+      if (regexMatch.index === lastIndex) {
+        break;
+      }
+      lastIndex = regexMatch.index;
       
-      // Skip if inside an existing link or HTML tag
-      if (!isInExistingLink(matchIndex)) {
-        // Check if not inside an HTML tag
-        const beforeMatch = html.substring(Math.max(0, matchIndex - 50), matchIndex);
-        const afterMatch = html.substring(matchIndex + matchLength, Math.min(html.length, matchIndex + matchLength + 50));
+      const matchIndex = regexMatch.index + (regexMatch[1] ? regexMatch[0].indexOf(regexMatch[1]) : 0);
+      const matchLength = regexMatch[1] ? regexMatch[1].length : regexMatch[0].length;
+      const matchedText = regexMatch[1] || regexMatch[0];
+      
+      // Skip if inside an existing link, HTML tag, TL;DR section, or heading
+      if (!isInExistingLink(matchIndex) && !isInTldrSection(matchIndex) && !isInHeading(matchIndex)) {
+        // Better check: ensure we're not inside any HTML tag or attribute
+        // Get a larger context to properly detect HTML structure
+        const contextStart = Math.max(0, matchIndex - 500);
+        const contextEnd = Math.min(html.length, matchIndex + matchLength + 500);
+        const context = html.substring(contextStart, contextEnd);
+        const relativeIndex = matchIndex - contextStart;
         
-        // Simple check: if there's a < before and > after, might be in a tag
-        const lastOpenTag = beforeMatch.lastIndexOf('<');
-        const lastCloseTag = beforeMatch.lastIndexOf('>');
-        const nextOpenTag = afterMatch.indexOf('<');
-        const nextCloseTag = afterMatch.indexOf('>');
+        // Check if we're inside an HTML tag by finding the last < and > before this position
+        const beforeContext = context.substring(0, relativeIndex);
+        const lastOpenTag = beforeContext.lastIndexOf('<');
+        const lastCloseTag = beforeContext.lastIndexOf('>');
         
-        // If there's an unclosed tag before, skip
+        // If there's an unclosed tag before us, we're inside a tag
         if (lastOpenTag > lastCloseTag) {
+          // Check if we're inside an attribute (between quotes)
+          const tagContent = beforeContext.substring(lastOpenTag);
+          const afterOpenTag = tagContent.substring(1);
+          
+          // Count quotes to see if we're inside an attribute value
+          const quoteMatches = afterOpenTag.match(/"/g);
+          if (quoteMatches && quoteMatches.length % 2 !== 0) {
+            // Odd number of quotes means we're inside an attribute value
+            continue;
+          }
+          
+          // We're inside a tag but not in an attribute - still skip
+          continue;
+        }
+        
+        // Check if we're immediately after a tag opening (within tag name/attributes)
+        const afterContext = context.substring(relativeIndex + matchLength);
+        const nextOpenTag = afterContext.indexOf('<');
+        const nextCloseTag = afterContext.indexOf('>');
+        
+        // If there's a > before the next <, we're safe
+        // But if < comes before >, we might be inside a tag
+        if (nextOpenTag !== -1 && (nextCloseTag === -1 || nextOpenTag < nextCloseTag)) {
+          // Check if the < is part of a closing tag or if we're still in an opening tag
+          const potentialTag = afterContext.substring(nextOpenTag, Math.min(nextOpenTag + 50, afterContext.length));
+          if (!potentialTag.startsWith('</')) {
+            // This might be a new opening tag, but let's be safe and check
+            // If we're between < and >, skip
+            continue;
+          }
+        }
+        
+        // Ensure we're matching actual text content, not HTML
+        const textBefore = html.substring(Math.max(0, matchIndex - 5), matchIndex);
+        const textAfter = html.substring(matchIndex + matchLength, Math.min(html.length, matchIndex + matchLength + 5));
+        
+        // Skip if immediately preceded or followed by HTML tag characters
+        if (textBefore.trim().endsWith('<') || textAfter.trim().startsWith('>') || textAfter.trim().startsWith('=')) {
+          continue;
+        }
+        
+        // Skip if the match looks like it's part of a URL or slug (contains hyphens in a slug-like pattern)
+        // Only skip if it's a long hyphenated phrase that looks like a slug
+        if (matchedText.includes('-') && matchedText.length > 15 && matchedText.split('-').length > 2) {
+          // This might be a slug, skip it
           continue;
         }
         
         matches.push({
           index: matchIndex,
           length: matchLength,
-          text: regexMatch[0],
+          text: matchedText,
+          fullMatch: regexMatch[0],
         });
       }
     }
@@ -600,8 +741,14 @@ function addInternalLinks(html: string, currentSlug: string): string {
     // Add link to first match (avoid over-linking)
     if (matches.length > 0 && !addedLinks.has(linkKey)) {
       const firstMatch = matches[0];
+      
+      // Double-check we're not inside a tag, link, TL;DR, or heading
+      if (isInExistingLink(firstMatch.index) || isInTldrSection(firstMatch.index) || isInHeading(firstMatch.index)) {
+        continue;
+      }
+      
       const beforeLink = html.substring(0, firstMatch.index);
-      const matchedText = html.substring(firstMatch.index, firstMatch.index + firstMatch.length);
+      const matchedText = firstMatch.text;
       const afterLink = html.substring(firstMatch.index + firstMatch.length);
       
       // Create descriptive anchor text using the keyword
@@ -612,12 +759,28 @@ function addInternalLinks(html: string, currentSlug: string): string {
       addedLinks.add(linkKey);
       linksAdded++;
       
-      // Update existing links positions (shift by link length difference)
+      // Update existing links and TL;DR positions (shift by link length difference)
       const lengthDiff = linkHtml.length - firstMatch.length;
       for (let i = 0; i < existingLinks.length; i++) {
         if (existingLinks[i].start > firstMatch.index) {
           existingLinks[i].start += lengthDiff;
           existingLinks[i].end += lengthDiff;
+        }
+      }
+      
+      // Update TL;DR section positions
+      for (let i = 0; i < tldrSections.length; i++) {
+        if (tldrSections[i].start > firstMatch.index) {
+          tldrSections[i].start += lengthDiff;
+          tldrSections[i].end += lengthDiff;
+        }
+      }
+      
+      // Update heading section positions
+      for (let i = 0; i < headingSections.length; i++) {
+        if (headingSections[i].start > firstMatch.index) {
+          headingSections[i].start += lengthDiff;
+          headingSections[i].end += lengthDiff;
         }
       }
     }
@@ -643,11 +806,30 @@ function addInternalLinks(html: string, currentSlug: string): string {
         
         let regexMatch;
         let found = false;
+        let lastWordIndex = 0;
+        wordRegex.lastIndex = 0;
+        
         while ((regexMatch = wordRegex.exec(html)) !== null && !found) {
-          const matchIndex = regexMatch.index;
+          // Prevent infinite loops
+          if (regexMatch.index === lastWordIndex) {
+            break;
+          }
+          lastWordIndex = regexMatch.index;
           
-          if (!isInExistingLink(matchIndex)) {
-            const matchedText = regexMatch[0];
+          const matchIndex = regexMatch.index;
+          const matchedText = regexMatch[0];
+          
+          if (!isInExistingLink(matchIndex) && !isInTldrSection(matchIndex) && !isInHeading(matchIndex)) {
+            // Check if we're inside an HTML tag or attribute
+            const beforeMatch = html.substring(Math.max(0, matchIndex - 200), matchIndex);
+            const lastOpenTag = beforeMatch.lastIndexOf('<');
+            const lastCloseTag = beforeMatch.lastIndexOf('>');
+            const isInsideTag = lastOpenTag > lastCloseTag;
+            
+            if (isInsideTag) {
+              continue;
+            }
+            
             const beforeLink = html.substring(0, matchIndex);
             const afterLink = html.substring(matchIndex + matchedText.length);
             
@@ -658,12 +840,28 @@ function addInternalLinks(html: string, currentSlug: string): string {
             linksAdded++;
             found = true;
             
-            // Update existing links positions
+            // Update existing links and TL;DR positions
             const lengthDiff = linkHtml.length - matchedText.length;
             for (let i = 0; i < existingLinks.length; i++) {
               if (existingLinks[i].start > matchIndex) {
                 existingLinks[i].start += lengthDiff;
                 existingLinks[i].end += lengthDiff;
+              }
+            }
+            
+            // Update TL;DR section positions
+            for (let i = 0; i < tldrSections.length; i++) {
+              if (tldrSections[i].start > matchIndex) {
+                tldrSections[i].start += lengthDiff;
+                tldrSections[i].end += lengthDiff;
+              }
+            }
+            
+            // Update heading section positions
+            for (let i = 0; i < headingSections.length; i++) {
+              if (headingSections[i].start > matchIndex) {
+                headingSections[i].start += lengthDiff;
+                headingSections[i].end += lengthDiff;
               }
             }
           }
