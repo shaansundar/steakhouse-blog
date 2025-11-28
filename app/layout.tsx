@@ -1,15 +1,16 @@
 import type { Metadata, Viewport } from "next";
-import { Crimson_Pro, JetBrains_Mono } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-// Elegant serif for headings and body - distinctive, not generic
-const crimsonPro = Crimson_Pro({
+// Modern sans-serif for headings and body
+const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-crimson",
-  display: "swap",
+  variable: "--font-inter",
+  display: "optional", // Faster LCP - use system font if custom font not ready
+  preload: true,
 });
 
 // Monospace for code
@@ -29,6 +30,10 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
+  // Preload fonts for faster LCP
+  other: {
+    "font-display": "optional",
+  },
   title: {
     default: "SteakHouse Blog | GEO & AI Content Optimization",
     template: "%s | SteakHouse Blog",
@@ -97,8 +102,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" dir="ltr" className={`${crimsonPro.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
-      <body className="min-h-screen flex flex-col font-serif antialiased">
+    <html lang="en" dir="ltr" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col font-sans antialiased">
         <script
           dangerouslySetInnerHTML={{
             __html: `

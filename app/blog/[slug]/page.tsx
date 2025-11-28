@@ -83,6 +83,10 @@ export async function generateMetadata({
     title: seoTitle,
     description: metaDescription,
     authors: [{ name: post.author }],
+    // Preload fonts for faster LCP
+    other: {
+      "font-display": "optional",
+    },
     openGraph: {
       title: post.title,
       description: metaDescription,
@@ -121,14 +125,21 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const userAgent = headersList.get("user-agent");
   const crawlerInfo = detectCrawler(userAgent);
 
-  // Track page view server-side (works for bots and humans)
-  await incrementPageView({
+  // Track page view server-side (non-blocking for faster LCP)
+  // Fire and forget - don't await to avoid blocking render
+  incrementPageView({
     slug: post.slug,
     isCrawler: crawlerInfo.isCrawler,
+  }).catch((err) => {
+    // Silently fail - analytics shouldn't block rendering
+    console.error("Failed to increment page view:", err);
   });
 
-  // Get current view stats (after incrementing)
-  const viewStats = await getPageViewStats(post.slug);
+  // Get current view stats (non-blocking - fetch in parallel)
+  const viewStatsPromise = getPageViewStats(post.slug).catch(() => ({
+    views: 0,
+    crawlers_viewed: 0,
+  }));
 
   // Extract headings for table of contents
   const headings = extractHeadings(post.rawContent);
@@ -176,6 +187,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     breadcrumbSchema,
     ...(faqSchema ? [faqSchema] : []),
   ];
+
+  // Await view stats (non-blocking promise)
+  const viewStats = await viewStatsPromise;
 
   return (
     <>
@@ -229,8 +243,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 ))}
               </div>
 
-              {/* Title */}
-              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight mb-4 leading-tight">
+              {/* Title - Optimized for LCP with system font fallback */}
+              <h1 
+                className="text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight mb-4 leading-tight"
+                style={{
+                  fontFamily: 'var(--font-inter), Inter, system-ui, -apple-system, sans-serif',
+                }}
+              >
                 {post.title}
               </h1>
 
