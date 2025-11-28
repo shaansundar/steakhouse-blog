@@ -2,23 +2,26 @@
  * Loops Email Marketing Integration
  * 
  * Configuration and utilities for Loops.so email marketing platform.
+ * Uses the official Loops JavaScript SDK (@loops/loops).
  * 
  * Setup:
  * 1. Get your API key from https://app.loops.so/settings/api
  * 2. Add LOOPS_API_KEY to your .env file:
  *    LOOPS_API_KEY=your_api_key_here
+ * 3. Create a "newsletter_subscription" event in your Loops dashboard
+ *    (Settings → Events → Create Event)
  * 
  * The API route handles:
- * - Subscribing users to your Loops contact list
- * - Tagging subscribers with source information
- * - Handling duplicate subscriptions gracefully
+ * - Adding contacts to your Loops audience
+ * - Sending "newsletter_subscription" event
+ * - Tagging contacts with source information
+ * - Handling duplicate contacts gracefully
  * - Error handling and validation
  */
 
 export const LOOPS_CONFIG = {
-  apiUrl: "https://app.loops.so/api/v1",
-  defaultUserGroup: "blog-subscribers",
   defaultSource: "blog-sidebar",
+  eventName: "newsletter_subscription",
 } as const;
 
 /**

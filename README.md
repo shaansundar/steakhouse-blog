@@ -199,7 +199,7 @@ CREATE POLICY "Service role has full access" ON public.page_views
 
 ## 📧 Loops Newsletter Integration
 
-The blog includes a newsletter subscription form powered by [Loops.so](https://loops.so), an email marketing platform optimized for developers.
+The blog includes a newsletter subscription form powered by [Loops.so](https://loops.so), an email marketing platform optimized for developers. The integration uses the official Loops JavaScript SDK.
 
 ### Setup
 
@@ -224,11 +224,22 @@ The blog includes a newsletter subscription form powered by [Loops.so](https://l
 
 ### Features
 
-- **Automatic subscription** - Users are added to your Loops contact list
-- **Source tracking** - Subscribers are tagged with `source: "blog-sidebar"`
-- **User group** - Subscribers are added to the `blog-subscribers` group
-- **Duplicate handling** - Gracefully handles already-subscribed emails
+- **Add to audience** - Users are added to your Loops contact list (not auto-subscribed)
+- **Event tracking** - Sends `newsletter_subscription` event to trigger workflows
+- **Source tracking** - Contacts are tagged with `source: "blog-sidebar"`
+- **Duplicate handling** - Gracefully handles already-existing contacts
 - **Error handling** - User-friendly error messages for failed subscriptions
+
+### Event Setup
+
+Before using the newsletter form, create the event in your Loops dashboard:
+
+1. Go to **Settings → Events** in your Loops dashboard
+2. Click **Create Event**
+3. Name it: `newsletter_subscription`
+4. Save the event
+
+This event will be triggered when users subscribe, allowing you to set up automated email sequences or workflows in Loops.
 
 ### API Endpoint
 
