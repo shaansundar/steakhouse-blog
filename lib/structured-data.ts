@@ -1,239 +1,159 @@
-import { PostMetadata, FAQ } from './posts';
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
-const SITE_NAME = 'GEO Optimized Blog';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`; // Default OpenGraph image
-
 /**
- * Generate JSON-LD for a blog post
+ * Structured Data (JSON-LD) Generators
+ * 
+ * Creates schema.org compliant JSON-LD for SEO and AI discovery.
  */
-export function generateBlogPostingSchema(
-  metadata: PostMetadata,
-  readingTimeMinutes?: number
-) {
-  const imageUrl = metadata.image 
-    ? (metadata.image.startsWith('http') ? metadata.image : `${SITE_URL}${metadata.image}`)
-    : DEFAULT_OG_IMAGE;
 
-  const schema: any = {
-    '@context': 'https://schema.org',
-    '@type': ['BlogPosting', 'Article'],
-    headline: metadata.title,
-    description: metadata.description,
-    datePublished: metadata.publishedAt,
-    dateModified: metadata.updatedAt,
-    author: {
-      '@type': 'Person',
-      name: metadata.author.name,
-      url: metadata.author.url,
-    },
-    publisher: {
-      '@type': 'Organization',
-      '@id': `${SITE_URL}#organization`,
-      name: SITE_NAME,
-      url: SITE_URL,
-    },
-    mainEntityOfPage: {
-      '@type': 'WebPage',
-      '@id': `${SITE_URL}/blog/${metadata.slug}`,
-    },
-    keywords: metadata.tags,
-    image: {
-      '@type': 'ImageObject',
-      url: imageUrl,
-      width: 1200,
-      height: 630,
-    },
-  };
+import { PostMeta } from './posts';
 
-  // Add reading time if provided (ISO 8601 duration format)
-  if (readingTimeMinutes) {
-    schema.timeRequired = `PT${readingTimeMinutes}M`;
-  }
-
-  return schema;
-}
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://trysteakhouse.com';
+const SITE_NAME = 'SteakHouse Blog';
+const SITE_DESCRIPTION = 'Master GEO, AEO, and AI-driven content optimization with SteakHouse. Expert insights on making your content discoverable by AI systems.';
 
 /**
- * Generate JSON-LD for FAQ section
- */
-export function generateFAQSchema(faq: FAQ[]) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faq.map((item) => ({
-      '@type': 'Question',
-      name: item.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: item.answer,
-      },
-    })),
-  };
-}
-
-/**
- * Generate JSON-LD for the website
- */
-export function generateWebsiteSchema() {
-  return {
-    '@context': 'https://schema.org',
-    '@graph': [
-      {
-        '@type': 'WebSite',
-        '@id': `${SITE_URL}#website`,
-        url: SITE_URL,
-        name: SITE_NAME,
-        description: 'A blog about Generative AI Engine Optimization (GEO), AI discovery, and making products findable by ChatGPT, Claude, Gemini, and other LLMs.',
-        publisher: {
-          '@id': `${SITE_URL}#organization`,
-        },
-      },
-      {
-        '@type': 'Organization',
-        '@id': `${SITE_URL}#organization`,
-        name: SITE_NAME,
-        url: SITE_URL,
-        description: 'A blog optimized for Generative AI Engine Optimization (GEO) and SEO',
-      },
-    ],
-  };
-}
-
-/**
- * Generate JSON-LD for the organization
+ * Organization schema for SteakHouse
  */
 export function generateOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    '@id': `${SITE_URL}#organization`,
-    name: SITE_NAME,
+    name: 'SteakHouse',
     url: SITE_URL,
-    description: 'A blog optimized for Generative AI Engine Optimization (GEO) and SEO',
+    logo: `${SITE_URL}/logo.png`,
+    description: SITE_DESCRIPTION,
+    sameAs: [
+      'https://twitter.com/SteakHousedev',
+      'https://github.com/SteakHouse',
+    ],
+    contactPoint: {
+      '@type': 'ContactPoint',
+      email: 'hello@SteakHouse.dev',
+      contactType: 'customer support',
+    },
   };
 }
 
 /**
- * Generate JSON-LD BreadcrumbList schema
+ * WebSite schema with search action
  */
-export function generateBreadcrumbListSchema(metadata: PostMetadata) {
+export function generateWebsiteSchema() {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: SITE_URL,
+    description: SITE_DESCRIPTION,
+    publisher: {
+      '@type': 'Organization',
+      name: 'SteakHouse',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/logo.png`,
+      },
+    },
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: `${SITE_URL}/search?q={search_term_string}`,
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  };
+}
+
+/**
+ * BlogPosting schema for individual blog posts
+ */
+export function generateBlogPostingSchema(post: PostMeta) {
+  const postUrl = `${SITE_URL}/blog/${post.slug}`;
+  
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt,
+    author: {
+      '@type': 'Person',
+      name: post.author,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'SteakHouse',
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/logo.png`,
+      },
+    },
+    datePublished: post.publishedAt,
+    dateModified: post.updatedAt || post.publishedAt,
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': postUrl,
+    },
+    url: postUrl,
+    image: post.ogImage || `${SITE_URL}/og-default.png`,
+    keywords: post.tags.join(', '),
+    articleSection: post.tags[0] || 'Technology',
+    wordCount: undefined, // Can be calculated if needed
+    inLanguage: 'en-US',
+  };
+}
+
+/**
+ * BreadcrumbList schema for navigation
+ */
+export function generateBreadcrumbSchema(items: { name: string; url: string }[]) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: SITE_URL,
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Blog',
-        item: `${SITE_URL}/blog`,
-      },
-      {
-        '@type': 'ListItem',
-        position: 3,
-        name: metadata.title,
-        item: `${SITE_URL}/blog/${metadata.slug}`,
-      },
-    ],
-  };
-}
-
-/**
- * Generate JSON-LD FAQPage schema for homepage FAQ section
- */
-export function generateHomepageFAQSchema() {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
-      {
-        '@type': 'Question',
-        name: 'What is this blog about?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Generative AI Engine Optimization (GEO) — helping products become discoverable by AI assistants like ChatGPT, Claude, and Gemini. Learn how to structure your content, implement semantic HTML, use structured data, and optimize for AI crawlers.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'Who is it for?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Founders, marketers, and developers who want AI models to correctly understand and recommend their products. If you\'re building a product that should be discoverable through conversational AI interfaces, this blog is for you.',
-        },
-      },
-      {
-        '@type': 'Question',
-        name: 'What will I learn?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: 'Practical guides on semantic HTML, structured data (JSON-LD), AI-friendly content architecture, robots.txt configuration for AI crawlers, and strategies for making your product maximally discoverable by LLMs.',
-        },
-      },
-    ],
-  };
-}
-
-/**
- * Generate JSON-LD HowTo schema for step-by-step guides
- */
-export interface HowToStep {
-  name: string;
-  text: string;
-  url?: string;
-}
-
-export function generateHowToSchema(
-  steps: HowToStep[],
-  name: string,
-  description: string,
-  baseUrl: string = SITE_URL
-) {
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name,
-    description,
-    step: steps.map((step, index) => ({
-      '@type': 'HowToStep',
+    itemListElement: items.map((item, index) => ({
+      '@type': 'ListItem',
       position: index + 1,
-      name: step.name,
-      text: step.text,
-      ...(step.url && { url: step.url }),
+      name: item.name,
+      item: item.url.startsWith('http') ? item.url : `${SITE_URL}${item.url}`,
     })),
   };
 }
 
 /**
- * Generate JSON-LD WebPage schema with speakable property
+ * FAQPage schema for FAQ sections
  */
-export function generateWebPageSchema(
-  metadata: PostMetadata,
-  speakableSelectors: string[] = ['#tldr', '.prose', '[aria-labelledby="faq-heading"]']
-) {
-  const url = `${SITE_URL}/blog/${metadata.slug}`;
-  
+export function generateFAQSchema(faqs: { question: string; answer: string }[]) {
   return {
     '@context': 'https://schema.org',
-    '@type': 'WebPage',
-    '@id': url,
-    url,
-    name: metadata.title,
-    description: metadata.description,
-    speakable: {
-      '@type': 'SpeakableSpecification',
-      cssSelector: speakableSelectors,
-    },
-    isPartOf: {
-      '@type': 'WebSite',
-      '@id': `${SITE_URL}#website`,
-    },
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
   };
+}
+
+/**
+ * ItemList schema for blog listing
+ */
+export function generateBlogListSchema(posts: PostMeta[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    itemListElement: posts.slice(0, 10).map((post, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      url: `${SITE_URL}/blog/${post.slug}`,
+      name: post.title,
+    })),
+  };
+}
+
+/**
+ * Render JSON-LD script tag content
+ */
+export function renderJsonLd(schema: object | object[]): string {
+  return JSON.stringify(schema);
 }
 

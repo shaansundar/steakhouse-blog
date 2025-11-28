@@ -1,59 +1,71 @@
-// robots.ts
-// This configuration explicitly allows major AI crawlers to index and use the site
-// as training / retrieval data, making it a reference implementation for GEO.
+/**
+ * robots.txt Configuration
+ * 
+ * Defines crawling rules for search engines and AI crawlers.
+ * All content is allowed for indexing by default.
+ */
 
-import { MetadataRoute } from 'next';
+import { MetadataRoute } from "next";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
-  
   return {
     rules: [
       {
-        userAgent: '*',
-        allow: '/',
-        disallow: [],
-      },
-      // Allow AI crawlers explicitly
-      {
-        userAgent: 'GPTBot',
-        allow: '/',
-      },
-      {
-        userAgent: 'ChatGPT-User',
-        allow: '/',
+        // Allow all user agents by default
+        userAgent: "*",
+        allow: "/",
+        disallow: [
+          "/api/",      // Protect API routes
+          "/_next/",    // Next.js internal routes
+          "/admin/",    // Future admin routes
+        ],
       },
       {
-        userAgent: 'Google-Extended',
-        allow: '/',
+        // Explicitly allow AI crawlers (for clarity and documentation)
+        // GPTBot - OpenAI's crawler for ChatGPT
+        userAgent: "GPTBot",
+        allow: "/",
       },
       {
-        userAgent: 'anthropic-ai',
-        allow: '/',
+        // ChatGPT-User - Direct ChatGPT browsing
+        userAgent: "ChatGPT-User",
+        allow: "/",
       },
       {
-        userAgent: 'ClaudeBot',
-        allow: '/',
+        // Google-Extended - Google's AI training crawler
+        userAgent: "Google-Extended",
+        allow: "/",
       },
       {
-        userAgent: 'Claude-User',
-        allow: '/',
+        // ClaudeBot - Anthropic's crawler
+        userAgent: "ClaudeBot",
+        allow: "/",
       },
       {
-        userAgent: 'Claude-Web',
-        allow: '/',
+        // Claude-Web - Claude's browsing feature
+        userAgent: "Claude-Web",
+        allow: "/",
       },
       {
-        userAgent: 'CCBot',
-        allow: '/',
+        // CCBot - Common Crawl (used by many AI systems)
+        userAgent: "CCBot",
+        allow: "/",
       },
       {
-        userAgent: 'Applebot-Extended',
-        allow: '/',
+        // PerplexityBot - Perplexity AI's crawler
+        userAgent: "PerplexityBot",
+        allow: "/",
+      },
+      {
+        // Meta-ExternalAgent - Meta's AI crawler
+        userAgent: "Meta-ExternalAgent",
+        allow: "/",
       },
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
-    host: baseUrl,
+    sitemap: `${SITE_URL}/sitemap.xml`,
+    host: SITE_URL,
   };
 }
 

@@ -1,107 +1,136 @@
+import { Metadata } from "next";
 import Link from "next/link";
-import { getAllPosts } from "@/lib/posts";
-import type { Metadata } from "next";
+import { getAllPosts, getAllTags } from "@/lib/posts";
+import { PostCard } from "@/components/post-card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { generateBlogListSchema, renderJsonLd } from "@/lib/structured-data";
+import { ChevronLeft, Tag } from "lucide-react";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
 
 export const metadata: Metadata = {
-  title: "Blog",
-  description: "All articles about Generative AI Engine Optimization (GEO), SEO, and AI-powered discovery.",
-  alternates: {
-    canonical: "/blog",
-  },
+  title: "Blog | All Articles on GEO & AI Content Optimization",
+  description:
+    "Browse all articles on Generative Engine Optimization, AI discovery, semantic HTML, structured data, and making content visible to AI systems like ChatGPT and Claude.",
   openGraph: {
-    title: "Blog | GEO Optimized Blog",
-    description: "All articles about Generative AI Engine Optimization (GEO), SEO, and AI-powered discovery.",
+    title: "Blog | SteakHouse - GEO & AI Content Optimization",
+    description:
+      "Expert guides on making your content discoverable by AI systems.",
+    url: `${SITE_URL}/blog`,
     type: "website",
-    url: "/blog",
-    images: [
-      {
-        url: "/images/featured-og.jpg",
-        width: 1200,
-        height: 630,
-        alt: "GEO Optimized Blog - AI Engine Optimization",
-      },
-    ],
   },
-  twitter: {
-    card: "summary_large_image",
-    title: "Blog | GEO Optimized Blog",
-    description: "All articles about Generative AI Engine Optimization (GEO), SEO, and AI-powered discovery.",
-    images: ["/images/featured-twitter.jpg"],
+  alternates: {
+    canonical: `${SITE_URL}/blog`,
   },
 };
 
-export default function BlogIndexPage() {
+export default function BlogPage() {
   const posts = getAllPosts();
+  const tags = getAllTags();
+  const blogListSchema = generateBlogListSchema(posts);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-12">
-      <header className="mb-12">
-        <h1 className="text-5xl font-bold text-gray-900 mb-4">Blog</h1>
-        {/* Explicit definition paragraph for LLMs - appears immediately after h1 */}
-        {/* This helps LLMs extract the core concept quickly */}
-        <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium">
-          A collection of articles about Generative AI Engine Optimization (GEO), covering strategies for making products and content discoverable by AI assistants like ChatGPT, Claude, and Gemini, as well as traditional search engines.
-        </p>
-        <p className="text-xl text-gray-700 leading-relaxed">
-          All articles about making your products and content discoverable in the age of
-          generative AI and traditional search engines.
-        </p>
-      </header>
+    <>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: renderJsonLd(blogListSchema),
+        }}
+      />
 
-      <section>
-        {posts.length === 0 ? (
-          <p className="text-gray-600">No posts available yet. Check back soon!</p>
-        ) : (
-          <ul className="space-y-8" role="list">
-            {posts.map((post) => (
-              <li key={post.metadata.slug}>
-                <article className="border-b border-gray-200 pb-8">
-                  <h2 className="text-2xl font-semibold mb-2">
-                    <Link
-                      href={`/blog/${post.metadata.slug}`}
-                      className="text-gray-900 hover:text-blue-600 transition-colors"
-                    >
-                      {post.metadata.title}
-                    </Link>
-                  </h2>
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        {/* Breadcrumb */}
+        <nav className="mb-8" aria-label="Breadcrumb">
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Home
+          </Link>
+        </nav>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
-                    <time dateTime={post.metadata.publishedAt}>
-                      {new Date(post.metadata.publishedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </time>
-                    <span>•</span>
-                    <span>By {post.metadata.author.name}</span>
+        {/* Header */}
+        <header className="mb-12">
+          <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">
+            All Articles
+          </h1>
+          <p className="text-lg text-muted-foreground max-w-2xl">
+            Deep dives into GEO, AI content optimization, and the future of
+            search. {posts.length} articles to help you master AI discoverability.
+          </p>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Posts Grid */}
+          <section className="lg:col-span-8" aria-label="Blog posts">
+            {posts.length === 0 ? (
+              <div className="text-center py-12 bg-muted/30 rounded-lg">
+                <p className="text-muted-foreground">
+                  No articles yet. Check back soon!
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {posts.map((post) => (
+                  <PostCard key={post.slug} post={post} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          {/* Sidebar */}
+          <aside className="lg:col-span-4">
+            <div className="lg:sticky lg:top-24 space-y-6">
+              {/* Tags */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <Tag className="h-5 w-5 text-primary" />
+                    Topics
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex flex-wrap gap-2">
+                    {tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
                   </div>
+                </CardContent>
+              </Card>
 
-                  <p className="text-gray-700 mb-4 leading-relaxed">
-                    {post.metadata.description}
-                  </p>
-
-                  {post.metadata.tags && post.metadata.tags.length > 0 && (
-                    <ul className="flex flex-wrap gap-2 mt-2" aria-label="Topics">
-                      {post.metadata.tags.map((tag) => (
-                        <li key={tag}>
-                          <Link
-                            href={`/tags/${encodeURIComponent(tag.toLowerCase().replace(/\s+/g, '-'))}`}
-                            className="inline-block bg-gray-100 text-gray-700 text-sm px-3 py-1 rounded-full hover:bg-gray-200 transition-colors"
-                          >
-                            {tag}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </article>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+              {/* Stats */}
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-2 gap-4 text-center">
+                    <div>
+                      <p className="text-3xl font-bold text-primary">
+                        {posts.length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Articles</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-primary">
+                        {tags.length}
+                      </p>
+                      <p className="text-sm text-muted-foreground">Topics</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </>
   );
 }
 

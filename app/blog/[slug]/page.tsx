@@ -1,35 +1,46 @@
-import Link from "next/link";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getAllPostSlugs, getPostBySlug, getRelatedPosts } from "@/lib/posts";
-import { processHtml } from "@/lib/markdown";
+import Link from "next/link";
+import { headers } from "next/headers";
+import { getPostBySlug, getAllPosts, extractHeadings, extractFAQs } from "@/lib/posts";
+import { detectCrawler } from "@/lib/userAgent";
+import { incrementPageView, getPageViewStats } from "@/lib/supabaseServer";
 import {
   generateBlogPostingSchema,
+  generateBreadcrumbSchema,
   generateFAQSchema,
-  generateBreadcrumbListSchema,
-  generateHowToSchema,
-  generateWebPageSchema,
-  type HowToStep,
+  renderJsonLd,
 } from "@/lib/structured-data";
-import { calculateReadingTime } from "@/lib/reading-time";
-import type { Metadata } from "next";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { ViewCount } from "@/components/view-count";
+import { CrawlerStats } from "@/components/crawler-stats";
+import {
+  Calendar,
+  Clock,
+  User,
+  ChevronLeft,
+  ArrowRight,
+  ListTree,
+} from "lucide-react";
 
-interface PageProps {
-  params: {
-    slug: string;
-  };
+// Force SSR - no static generation
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
+
+interface BlogPostPageProps {
+  params: Promise<{ slug: string }>;
 }
 
-// Generate static paths for all blog posts
-export async function generateStaticParams() {
-  const slugs = getAllPostSlugs();
-  return slugs.map((slug) => ({
-    slug,
-  }));
-}
-
-// Generate metadata for SEO
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const post = getPostBySlug(params.slug);
+export async function generateMetadata({
+  params,
+}: BlogPostPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     return {
@@ -37,362 +48,379 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const { metadata } = post;
-  const url = `/blog/${metadata.slug}`;
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
-  const defaultImage = `${siteUrl}/og-image.jpg`;
-  const imageUrl = metadata.image 
-    ? (metadata.image.startsWith('http') ? metadata.image : `${siteUrl}${metadata.image}`)
-    : defaultImage;
+  const postUrl = `${SITE_URL}/blog/${post.slug}`;
+
+  // Ensure meta description is optimal length (120-160 chars)
+  let metaDescription = post.excerpt;
+  if (metaDescription.length < 120) {
+    // Extend with more context if too short
+    metaDescription = `${post.excerpt} Learn more about ${post.tags[0] || 'content optimization'} and discover best practices.`;
+  }
+  if (metaDescription.length > 160) {
+    // Truncate to 160 chars at word boundary
+    metaDescription = metaDescription.substring(0, 157).trim() + '...';
+  }
+
+  // Optimize title for SEO (aim for 50-60 characters total)
+  // Layout template adds " | SteakHouse Blog" (18 chars), so base title should be ~40 chars max
+  let seoTitle = post.title;
+  const MAX_BASE_TITLE_LENGTH = 40; // 40 + 18 (template) = 58 chars total
+  if (seoTitle.length > MAX_BASE_TITLE_LENGTH) {
+    // Truncate at word boundary, keeping core meaning
+    const words = seoTitle.split(' ');
+    let truncated = '';
+    for (const word of words) {
+      if ((truncated + ' ' + word).trim().length <= MAX_BASE_TITLE_LENGTH) {
+        truncated = (truncated + ' ' + word).trim();
+      } else {
+        break;
+      }
+    }
+    seoTitle = truncated || seoTitle.substring(0, MAX_BASE_TITLE_LENGTH);
+  }
 
   return {
-    title: metadata.title,
-    description: metadata.description,
+    title: seoTitle,
+    description: metaDescription,
+    authors: [{ name: post.author }],
     openGraph: {
-      title: metadata.title,
-      description: metadata.description,
+      title: post.title,
+      description: metaDescription,
+      url: postUrl,
       type: "article",
-      publishedTime: metadata.publishedAt,
-      modifiedTime: metadata.updatedAt,
-      authors: [metadata.author.name],
-      url,
-      tags: metadata.tags,
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: metadata.title,
-        },
-      ],
+      publishedTime: post.publishedAt,
+      modifiedTime: post.updatedAt || post.publishedAt,
+      authors: [post.author],
+      images: post.ogImage
+        ? [{ url: post.ogImage, width: 1200, height: 630, alt: post.title }]
+        : [{ url: "/og-default.png", width: 1200, height: 630, alt: post.title }],
+      tags: post.tags,
     },
     twitter: {
       card: "summary_large_image",
-      title: metadata.title,
-      description: metadata.description,
-      images: [imageUrl],
+      title: post.title,
+      description: metaDescription,
+      images: post.ogImage ? [post.ogImage] : ["/og-default.png"],
     },
     alternates: {
-      canonical: url,
+      canonical: postUrl,
     },
   };
 }
 
-export default function BlogPostPage({ params }: PageProps) {
-  const post = getPostBySlug(params.slug);
+export default async function BlogPostPage({ params }: BlogPostPageProps) {
+  const { slug } = await params;
+  const post = await getPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
 
-  const { metadata, content } = post;
-  const htmlContent = processHtml(content);
-  const relatedPosts = getRelatedPosts(params.slug);
-  
-  // Calculate reading time
-  const readingTimeMinutes = calculateReadingTime(content);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz';
-  const postUrl = `${siteUrl}/blog/${metadata.slug}`;
+  // Get request headers for crawler detection and view tracking
+  const headersList = await headers();
+  const userAgent = headersList.get("user-agent");
+  const crawlerInfo = detectCrawler(userAgent);
 
-  // Generate JSON-LD schemas
-  const blogPostingSchema = generateBlogPostingSchema(metadata, readingTimeMinutes);
-  const breadcrumbSchema = generateBreadcrumbListSchema(metadata);
-  const faqSchema = metadata.faq && metadata.faq.length > 0 
-    ? generateFAQSchema(metadata.faq) 
+  // Track page view server-side (works for bots and humans)
+  await incrementPageView({
+    slug: post.slug,
+    isCrawler: crawlerInfo.isCrawler,
+  });
+
+  // Get current view stats (after incrementing)
+  const viewStats = await getPageViewStats(post.slug);
+
+  // Extract headings for table of contents
+  const headings = extractHeadings(post.rawContent);
+  
+  // Extract FAQs from content
+  const faqs = extractFAQs(post.rawContent);
+
+  // Get related posts (same tags, different slug)
+  const allPosts = getAllPosts();
+  const relatedPosts = allPosts
+    .filter(
+      (p) =>
+        p.slug !== post.slug &&
+        p.tags.some((tag) => post.tags.includes(tag))
+    )
+    .slice(0, 3);
+
+  // Format dates
+  const formattedPublishedDate = new Date(post.publishedAt).toLocaleDateString(
+    "en-US",
+    { year: "numeric", month: "long", day: "numeric" }
+  );
+  const formattedUpdatedDate = post.updatedAt
+    ? new Date(post.updatedAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
     : null;
+
+  // Generate structured data
+  const blogPostingSchema = generateBlogPostingSchema(post);
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Blog", url: "/blog" },
+    { name: post.title, url: `/blog/${post.slug}` },
+  ]);
   
-  // Generate WebPage schema with speakable property
-  const webPageSchema = generateWebPageSchema(metadata);
+  // Generate FAQ schema if FAQs exist
+  const faqSchema = faqs.length > 0 ? generateFAQSchema(faqs) : null;
   
-  // Generate HowTo schema if content contains step-by-step instructions
-  // Extract steps from HTML content (looking for <h3> or <h4> with Step X: pattern)
-  const howToSteps: HowToStep[] = [];
-  const stepPattern = /<h[34][^>]*>.*?Step\s+(\d+)[:\s]+(.+?)<\/h[34]>/gi;
-  const stepMatches = [...content.matchAll(stepPattern)];
-  
-  if (stepMatches.length >= 2) {
-    stepMatches.forEach((match, index) => {
-      const stepNumber = parseInt(match[1], 10);
-      const stepTitle = match[2].replace(/<[^>]*>/g, '').trim();
-      
-      // Extract step content (HTML between this heading and next heading or end)
-      const stepStartIndex = match.index! + match[0].length;
-      const nextStepIndex = index < stepMatches.length - 1 
-        ? stepMatches[index + 1].index!
-        : content.length;
-      
-      let stepHtml = content.substring(stepStartIndex, nextStepIndex);
-      // Extract text from first paragraph
-      const firstPMatch = stepHtml.match(/<p[^>]*>(.*?)<\/p>/i);
-      let stepText = firstPMatch 
-        ? firstPMatch[1].replace(/<[^>]*>/g, '').trim()
-        : stepHtml.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-      
-      // Clean up and limit length
-      stepText = stepText
-        .substring(0, 500)
-        .trim();
-      
-      if (stepText && stepText.length > 20) {
-        howToSteps.push({
-          name: stepTitle,
-          text: stepText,
-          url: `${postUrl}#step-${stepNumber}`,
-        });
-      }
-    });
-  }
-  
-  const howToSchema = howToSteps.length >= 2
-    ? generateHowToSchema(
-        howToSteps,
-        `How to Implement ${metadata.title}`,
-        metadata.description,
-        siteUrl
-      )
-    : null;
+  // Combine all schemas
+  const structuredDataSchemas = [
+    blogPostingSchema,
+    breadcrumbSchema,
+    ...(faqSchema ? [faqSchema] : []),
+  ];
 
   return (
     <>
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostingSchema) }}
+        dangerouslySetInnerHTML={{
+          __html: renderJsonLd(structuredDataSchemas),
+        }}
       />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      {faqSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-      )}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webPageSchema) }}
-      />
-      {howToSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(howToSchema) }}
-        />
-      )}
 
-      <article
-        className="max-w-4xl mx-auto px-4 py-12"
-        itemScope
-        itemType="https://schema.org/BlogPosting"
-      >
-        {/* Breadcrumbs */}
-        <nav aria-label="Breadcrumb" className="mb-6 text-sm text-gray-600">
-          <ol className="flex flex-wrap items-center gap-1">
+      <article className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+        {/* Breadcrumb Navigation */}
+        <nav className="mb-8" aria-label="Breadcrumb">
+          <ol className="flex items-center gap-2 text-sm text-muted-foreground">
             <li>
-              <Link href="/" className="hover:text-gray-900 hover:underline transition-colors">
+              <Link
+                href="/"
+                className="hover:text-foreground transition-colors"
+              >
                 Home
               </Link>
-              <span aria-hidden="true" className="mx-2">/</span>
             </li>
+            <li key="separator-1" aria-hidden="true">/</li>
             <li>
-              <Link href="/blog" className="hover:text-gray-900 hover:underline transition-colors">
+              <Link
+                href="/blog"
+                className="hover:text-foreground transition-colors"
+              >
                 Blog
               </Link>
-              <span aria-hidden="true" className="mx-2">/</span>
             </li>
-            <li aria-current="page" className="font-medium text-gray-900">
-              {metadata.title}
+            <li key="separator-2" aria-hidden="true">/</li>
+            <li className="text-foreground truncate max-w-[200px]">
+              {post.title}
             </li>
           </ol>
         </nav>
 
-        {/* Article Header */}
-        <header className="mb-12">
-          <h1 className="text-5xl font-bold text-gray-900 mb-4" itemProp="headline">
-            {metadata.title}
-          </h1>
-
-          {/* Explicit definition paragraph for LLMs - appears immediately after h1 */}
-          {/* This helps LLMs extract the core concept quickly */}
-          <p className="text-xl text-gray-700 mb-4 leading-relaxed font-medium" itemProp="abstract">
-            {metadata.definition || metadata.description}
-          </p>
-
-          <div className="flex items-center gap-4 text-gray-600 border-t border-b border-gray-200 py-4 flex-wrap">
-            <div itemProp="author" itemScope itemType="https://schema.org/Person">
-              <span className="font-medium">
-                By{" "}
-                <a
-                  href={metadata.author.url}
-                  itemProp="url"
-                  className="text-blue-600 hover:text-blue-800"
-                >
-                  <span itemProp="name">{metadata.author.name}</span>
-                </a>
-              </span>
-            </div>
-            <span>•</span>
-            <time dateTime={metadata.publishedAt} itemProp="datePublished">
-              Published{" "}
-              {new Date(metadata.publishedAt).toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })}
-            </time>
-            {metadata.updatedAt !== metadata.publishedAt && (
-              <>
-                <span>•</span>
-                <time dateTime={metadata.updatedAt} itemProp="dateModified">
-                  Updated{" "}
-                  {new Date(metadata.updatedAt).toLocaleDateString("en-US", {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                  })}
-                </time>
-              </>
-            )}
-            <span>•</span>
-            <span className="text-gray-600">
-              {readingTimeMinutes} min read
-            </span>
-          </div>
-
-          {metadata.tags && metadata.tags.length > 0 && (
-            <ul className="flex flex-wrap gap-2 mt-4" aria-label="Topics">
-              {metadata.tags.map((tag) => (
-                <li key={tag}>
-                  <Link
-                    href={`/tags/${encodeURIComponent(tag.toLowerCase().replace(/\s+/g, '-'))}`}
-                    className="inline-block bg-blue-100 text-blue-800 text-sm px-3 py-1 rounded-full font-medium hover:bg-blue-200 transition-colors"
-                  >
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+          {/* Main Content */}
+          <div className="lg:col-span-8">
+            {/* Article Header */}
+            <header className="mb-8">
+              {/* Tags */}
+              <div className="flex flex-wrap gap-2 mb-4">
+                {post.tags.map((tag) => (
+                  <Badge key={tag} variant="secondary">
                     {tag}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </header>
+                  </Badge>
+                ))}
+              </div>
 
-        {/* TL;DR Section */}
-        <section aria-labelledby="tldr" className="mb-8 rounded-lg border border-gray-200 bg-gray-50 p-6">
-          <h2 id="tldr" className="text-sm font-semibold uppercase tracking-wide text-gray-700 mb-2">
-            TL;DR
-          </h2>
-          <p className="text-sm text-gray-700 leading-relaxed">
-            {(metadata as any).tldr ?? metadata.description}
-          </p>
-        </section>
+              {/* Title */}
+              <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold tracking-tight mb-4 leading-tight">
+                {post.title}
+              </h1>
 
-        {/* Main Content */}
-        <section
-          className="prose prose-lg max-w-none mb-12"
-          itemProp="articleBody"
-          dangerouslySetInnerHTML={{ __html: htmlContent }}
-        />
+              {/* Excerpt */}
+              <p className="text-lg lg:text-xl text-muted-foreground mb-6 leading-relaxed">
+                {post.excerpt}
+              </p>
 
-        {/* FAQ Section */}
-        {metadata.faq && metadata.faq.length > 0 && (
-          <section className="mb-12 bg-gray-50 rounded-lg p-8" role="complementary" aria-labelledby="faq-heading">
-            <h2 id="faq-heading" className="text-3xl font-semibold text-gray-900 mb-6">
-              Frequently Asked Questions
-            </h2>
-            <div className="space-y-6">
-              {metadata.faq.map((item, index) => (
-                <div key={index} className="border-b border-gray-200 pb-6 last:border-b-0">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    {item.question}
-                  </h3>
-                  <p className="text-gray-700 leading-relaxed">{item.answer}</p>
+              {/* Meta */}
+              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="font-medium">{post.author}</span>
                 </div>
-              ))}
+                <Separator orientation="vertical" className="h-4" />
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  <time dateTime={post.publishedAt}>{formattedPublishedDate}</time>
+                </div>
+                <Separator orientation="vertical" className="h-4" />
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  <span>{post.readingTime}</span>
+                </div>
+                {viewStats.views > 0 && (
+                  <>
+                    <Separator orientation="vertical" className="h-4" />
+                    <ViewCount slug={post.slug} initialViews={viewStats.views} showCrawlers />
+                  </>
+                )}
+                {viewStats.crawlers_viewed >= 0 && (
+                  <>
+                    <Separator orientation="vertical" className="h-4" />
+                    
+                  </>
+                )}
+              </div>
+
+              {formattedUpdatedDate && (
+                <p className="text-sm text-muted-foreground mt-2">
+                  Last updated: {formattedUpdatedDate}
+                </p>
+              )}
+            </header>
+
+            <Separator className="mb-8" />
+
+            {/* Article Body */}
+            <div
+              className="prose max-w-none"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+
+            <Separator className="my-12" />
+
+            {/* Related Posts */}
+            {relatedPosts.length > 0 && (
+              <section aria-labelledby="related-heading">
+                <h2
+                  id="related-heading"
+                  className="text-2xl font-bold mb-6"
+                >
+                  Related Articles
+                </h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {relatedPosts.map((related) => (
+                    <Link
+                      key={related.slug}
+                      href={`/blog/${related.slug}`}
+                      className="group block"
+                    >
+                      <Card className="h-full hover:border-primary/30 transition-colors">
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-base font-semibold group-hover:text-primary transition-colors line-clamp-2">
+                            {related.title}
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {related.excerpt}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* Back Link */}
+            <div className="mt-12">
+              <Link
+                href="/blog"
+                className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" />
+                Back to all articles
+              </Link>
             </div>
-          </section>
-        )}
-
-        {/* Author Bio */}
-        <section className="border-t border-gray-200 pt-8 mb-12">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">About the Author</h2>
-          <div className="bg-gray-50 rounded-lg p-6">
-            <p className="text-gray-700">
-              <strong>{metadata.author.name}</strong> writes about Generative AI Engine
-              Optimization and strategies for making products discoverable in the age of AI.
-            </p>
-            <a
-              href={metadata.author.url}
-              className="text-blue-600 hover:text-blue-800 font-medium mt-2 inline-block"
-            >
-              Learn more →
-            </a>
           </div>
-        </section>
 
-        {/* Related Posts */}
-        {relatedPosts.length > 0 && (
-          <section className="border-t border-gray-200 pt-8" role="complementary" aria-labelledby="related-heading">
-            <h2 id="related-heading" className="text-2xl font-semibold text-gray-900 mb-6">Related Articles</h2>
-            <ul className="space-y-4" role="list">
-              {relatedPosts.map((relatedPost) => (
-                <li key={relatedPost.metadata.slug}>
-                  <Link
-                    href={`/blog/${relatedPost.metadata.slug}`}
-                    className="block bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors"
-                  >
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {relatedPost.metadata.title}
-                    </h3>
-                    <p className="text-gray-700 text-sm">
-                      {relatedPost.metadata.description}
-                    </p>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+          {/* Sidebar */}
+          <aside className="lg:col-span-4">
+            <div className="lg:sticky lg:top-24 space-y-6">
+              {/* Table of Contents */}
+              {headings.length > 0 && (
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <ListTree className="h-5 w-5 text-primary" />
+                      Table of Contents
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <nav aria-label="Table of contents">
+                      <ul className="space-y-2 text-sm">
+                        {headings.map((heading) => (
+                          <li
+                            key={heading.id}
+                            style={{
+                              paddingLeft: `${(heading.level - 1) * 0.75}rem`,
+                            }}
+                          >
+                            <a
+                              href={`#${heading.id}`}
+                              className="text-muted-foreground hover:text-foreground transition-colors block py-1"
+                            >
+                              {heading.text}
+                            </a>
+                          </li>
+                        ))}
+                      </ul>
+                    </nav>
+                  </CardContent>
+                </Card>
+              )}
 
-        {/* References Section with Authoritative Links */}
-        <section className="border-t border-gray-200 pt-8 mt-12">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-4">References & Resources</h2>
-          <div className="bg-gray-50 rounded-lg p-6">
-            <ul className="space-y-2 text-gray-700">
-              <li>
-                <a 
-                  href="https://schema.org/BlogPosting" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
-                >
-                  Schema.org BlogPosting Documentation
-                </a>
-                <span className="text-gray-500 text-sm ml-2">— Official structured data specification</span>
-              </li>
-              <li>
-                <a 
-                  href="https://schema.org/BreadcrumbList" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
-                >
-                  Schema.org BreadcrumbList Documentation
-                </a>
-                <span className="text-gray-500 text-sm ml-2">— Navigation breadcrumb schema</span>
-              </li>
-              <li>
-                <a 
-                  href="https://ogp.me/" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-800 underline"
-                >
-                  Open Graph Protocol
-                </a>
-                <span className="text-gray-500 text-sm ml-2">— Social media metadata standard</span>
-              </li>
-            </ul>
-          </div>
-        </section>
+              {/* Crawler Statistics */}
+              <CrawlerStats slug={post.slug} />
+
+              {/* SteakHouse CTA */}
+              <Card className="overflow-hidden bg-linear-to-br from-primary/10 via-primary/5 to-transparent">
+                <div className="p-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-primary/10 size-10 flex items-center justify-center rounded-lg">
+                      <span className="text-2xl">🥩</span>
+                    </div>
+                    <div>
+                      <h3 className="font-bold">Optimize with SteakHouse</h3>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                    Want to ensure your content is optimized for AI discovery?
+                    SteakHouse automatically analyzes and enhances your content
+                    for GEO.
+                  </p>
+                  <Button asChild className="w-full font-semibold">
+                    <a
+                      href="https://trysteakhouse.com"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Try SteakHouse <ArrowRight className="ml-2 h-4 w-4" />
+                    </a>
+                  </Button>
+                </div>
+              </Card>
+
+              {/* Tags */}
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">Tags</CardTitle>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags.map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant="secondary"
+                        className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </aside>
+        </div>
       </article>
     </>
   );

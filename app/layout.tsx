@@ -1,39 +1,92 @@
-import type { Metadata } from "next";
-import Link from "next/link";
+import type { Metadata, Viewport } from "next";
+import { Crimson_Pro, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { generateWebsiteSchema } from "@/lib/structured-data";
-import { Analytics } from "@vercel/analytics/next";
+import { Header } from "@/components/header";
+import { Footer } from "@/components/footer";
+
+// Elegant serif for headings and body - distinctive, not generic
+const crimsonPro = Crimson_Pro({
+  subsets: ["latin"],
+  variable: "--font-crimson",
+  display: "swap",
+});
+
+// Monospace for code
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+};
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: "GEO Optimized Blog",
-    template: "%s | GEO Optimized Blog",
+    default: "SteakHouse Blog | GEO & AI Content Optimization",
+    template: "%s | SteakHouse Blog",
   },
-  description: "A blog optimized for Generative AI Engine Optimization (GEO) and classic SEO",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'https://steakhouse-test.nimbushq.xyz'),
-  openGraph: {
-    type: "website",
-    locale: "en_US",
-    url: "/",
-    siteName: "GEO Optimized Blog",
-    title: "GEO Optimized Blog",
-    description: "A blog optimized for Generative AI Engine Optimization (GEO) and classic SEO",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "GEO Optimized Blog",
-    description: "A blog optimized for Generative AI Engine Optimization (GEO) and classic SEO",
-  },
+  description:
+    "Master Generative Engine Optimization (GEO) and AI-driven content strategy. Expert insights on making your content discoverable by ChatGPT, Claude, and other AI systems.",
+  keywords: [
+    "GEO",
+    "Generative Engine Optimization",
+    "AI SEO",
+    "AEO",
+    "Content Optimization",
+    "AI Discovery",
+    "ChatGPT SEO",
+  ],
+  authors: [{ name: "SteakHouse Team" }],
+  creator: "SteakHouse",
+  publisher: "SteakHouse",
   robots: {
     index: true,
     follow: true,
     googleBot: {
       index: true,
       follow: true,
-      'max-video-preview': -1,
-      'max-image-preview': 'large',
-      'max-snippet': -1,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
     },
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: SITE_URL,
+    siteName: "SteakHouse Blog",
+    title: "SteakHouse Blog | GEO & AI Content Optimization",
+    description:
+      "Master Generative Engine Optimization (GEO) and AI-driven content strategy.",
+    images: [
+      {
+        url: "/og-default.png",
+        width: 1200,
+        height: 630,
+        alt: "SteakHouse Blog",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SteakHouse Blog | GEO & AI Content Optimization",
+    description:
+      "Master Generative Engine Optimization (GEO) and AI-driven content strategy.",
+    images: ["/og-default.png"],
+    creator: "@SteakHousedev",
+  },
+  alternates: {
+    canonical: SITE_URL,
+  },
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
   },
 };
 
@@ -42,70 +95,34 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const websiteSchema = generateWebsiteSchema();
-
   return (
-    <html lang="en">
-      <head>
+    <html lang="en" dir="ltr" className={`${crimsonPro.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col font-serif antialiased">
         <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  const stored = localStorage.getItem('theme');
+                  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const theme = stored || (systemPrefersDark ? 'dark' : 'light');
+                  
+                  if (theme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                } catch (e) {
+                  // Ignore errors (e.g., localStorage disabled)
+                }
+              })();
+            `,
+          }}
         />
-      </head>
-      <body className="min-h-screen flex flex-col">
-        <header className="border-b border-gray-200 bg-white" role="banner">
-          <nav className="max-w-4xl mx-auto px-4 py-6" aria-label="Main navigation" role="navigation">
-            <div className="flex items-center justify-between">
-              <Link 
-                href="/" 
-                className="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors"
-                aria-label="Go to homepage"
-              >
-                🥩 Steakhouse
-              </Link>
-              <ul className="flex gap-6" role="list">
-                <li>
-                  <Link 
-                    href="/" 
-                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
-                  >
-                    Home
-                  </Link>
-                </li>
-                <li>
-                  <Link 
-                    href="/blog" 
-                    className="text-gray-700 hover:text-gray-900 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded px-2 py-1"
-                  >
-                    Blog
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </nav>
-        </header>
-
-        <main className="flex-grow" role="main">
-          {children}
-        </main>
-
-        <footer className="border-t border-gray-200 bg-gray-50 mt-16" role="contentinfo">
-          <div className="max-w-4xl mx-auto px-4 py-8">
-            <div className="text-center text-gray-600">
-              <p className="mb-2">
-                © {new Date().getFullYear()} GEO Optimized Blog. Built for discoverability by humans and AI.
-              </p>
-              <p className="text-sm">
-                Optimized for{" "}
-                <span className="font-semibold">Generative AI Engine Optimization (GEO)</span>
-                {" "}and traditional SEO.
-              </p>
-            </div>
-          </div>
-        </footer>
+        <Header />
+        <main className="flex-1">{children}</main>
+        <Footer />
       </body>
-      <Analytics />
     </html>
   );
 }
-
