@@ -16,7 +16,7 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://blog.trysteakhouse
 export const metadata: Metadata = {
   title: "SteakHouse Blog | Master GEO & AI Content Optimization",
   description:
-    "Learn how to optimize your content for AI discovery. Expert guides on Generative Engine Optimization (GEO), semantic HTML, structured data, and making content visible to ChatGPT, Claude, and other AI systems.",
+    "Expert guides on Generative Engine Optimization (GEO), semantic HTML, structured data, and making content visible to ChatGPT, Claude, and other AI systems.",
   openGraph: {
     title: "SteakHouse Blog | Master GEO & AI Content Optimization",
     description:
