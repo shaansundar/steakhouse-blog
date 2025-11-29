@@ -6,7 +6,8 @@
 
 import { PostMeta } from './posts';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://trysteakhouse.com';
+// Use canonical blog domain - normalize to blog.trysteakhouse.com
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://blog.trysteakhouse.com';
 const SITE_NAME = 'SteakHouse Blog';
 const SITE_DESCRIPTION = 'Master GEO, AEO, and AI-driven content optimization with SteakHouse. Expert insights on making your content discoverable by AI systems.';
 
@@ -17,8 +18,8 @@ export function generateOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'SteakHouse',
-    url: SITE_URL,
+    name: 'SteakHouse by NimbusHQ',
+    url: 'https://trysteakhouse.com', // Main product URL
     logo: `${SITE_URL}/og-default.png`,
     description: SITE_DESCRIPTION,
     sameAs: [
@@ -45,10 +46,10 @@ export function generateWebsiteSchema() {
     description: SITE_DESCRIPTION,
     publisher: {
       '@type': 'Organization',
-      name: 'SteakHouse',
+      name: 'SteakHouse by NimbusHQ',
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_URL}/logo.png`,
+        url: `${SITE_URL}/og-default.png`,
       },
     },
     potentialAction: {
@@ -96,10 +97,10 @@ export function generateBlogPostingSchema(post: PostMeta, articleBody?: string) 
     author: authorSchema,
     publisher: {
       '@type': 'Organization',
-      name: 'SteakHouse',
+      name: 'SteakHouse by NimbusHQ',
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_URL}/logo.png`,
+        url: `${SITE_URL}/og-default.png`,
       },
     },
     datePublished: post.publishedAt,

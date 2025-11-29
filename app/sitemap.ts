@@ -6,37 +6,21 @@
  */
 
 import { MetadataRoute } from "next";
-import { headers } from "next/headers";
 import { getAllPosts } from "@/lib/posts";
 
 /**
- * Get the current site URL dynamically based on the request host
- * This ensures sitemap URLs match the domain where the sitemap is hosted
+ * Get the canonical site URL
+ * Uses NEXT_PUBLIC_SITE_URL environment variable for canonical domain
+ * Falls back to blog.trysteakhouse.com for blog-specific content
  */
-async function getSiteUrl(): Promise<string> {
-  try {
-    // Try to get the host from headers (works in production)
-    const headersList = await headers();
-    const host = headersList.get("host");
-    const protocol = headersList.get("x-forwarded-proto") || 
-                     headersList.get("x-forwarded-protocol") || 
-                     (host?.includes("localhost") ? "http" : "https");
-    
-    if (host && !host.includes("localhost")) {
-      // Use the actual request host (but not localhost for production)
-      return `${protocol === "https" ? "https" : "http"}://${host}`;
-    }
-  } catch (error) {
-    // Headers might not be available in all contexts
-    console.warn("Could not get host from headers:", error);
-  }
-  
-  // Fallback to environment variable or default
-  return process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
+function getSiteUrl(): string {
+  // Use canonical blog domain from environment variable
+  // Should be set to https://blog.trysteakhouse.com in production
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://blog.trysteakhouse.com";
 }
 
-export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const SITE_URL = await getSiteUrl();
+export default function sitemap(): MetadataRoute.Sitemap {
+  const SITE_URL = getSiteUrl();
   const posts = getAllPosts();
 
   // Static pages
@@ -51,6 +35,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       url: `${SITE_URL}/blog`,
       lastModified: new Date(),
       changeFrequency: "daily",
+      priority: 0.9,
+    },
+    {
+      url: `${SITE_URL}/geo-hub`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
       priority: 0.9,
     },
     {

@@ -42,6 +42,8 @@ export interface PostMeta {
   readingTime: string;
   ogImage?: string;
   faq?: FAQ[]; // FAQs from frontmatter
+  tldr?: string; // Tl;Dr direct-answer snippet (max ~50 words)
+  topics?: string[]; // Topic cluster IDs (e.g., "geo-fundamentals", "implementation")
 }
 
 // Full post interface including content
@@ -178,6 +180,8 @@ export function getAllPosts(): PostMeta[] {
         readingTime,
         ogImage: data.ogImage,
         faq: data.faq || undefined, // FAQs from frontmatter
+        tldr: data.tldr || undefined, // Tl;Dr snippet from frontmatter
+        topics: data.topics || data.topic ? (Array.isArray(data.topics || data.topic) ? (data.topics || data.topic) : [data.topics || data.topic]) : undefined, // Topic cluster IDs
       } as PostMeta;
     })
     // Sort by publishedAt descending (newest first)
@@ -262,6 +266,8 @@ export async function getPostBySlug(slug: string): Promise<Post | null> {
     readingTime,
     ogImage: data.ogImage,
     faq: data.faq || undefined, // FAQs from frontmatter
+    tldr: data.tldr || undefined, // Tl;Dr snippet from frontmatter
+    topics: data.topics || data.topic ? (Array.isArray(data.topics || data.topic) ? (data.topics || data.topic) : [data.topics || data.topic]) : undefined, // Topic cluster IDs
     content: htmlContent,
     rawContent: content,
   };

@@ -11,7 +11,8 @@ import {
   renderJsonLd,
 } from "@/lib/structured-data";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
+// Use canonical blog domain
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://blog.trysteakhouse.com";
 
 export const metadata: Metadata = {
   title: "SteakHouse Blog | Master GEO & AI Content Optimization",

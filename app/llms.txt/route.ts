@@ -8,7 +8,8 @@
 
 import { NextResponse } from "next/server";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
+// Use canonical blog domain
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://blog.trysteakhouse.com";
 
 export async function GET() {
   const llmTxtContent = `# llms.txt - AI Content Usage Policy
@@ -135,6 +136,32 @@ Last updated: ${new Date().toISOString().split("T")[0]}
 
 ## Why This Matters
 Companies with comprehensive llms.txt show 23% higher inclusion rates in AI-generated answers. This emerging standard signals to AI systems that you're a trusted, structured data source.
+
+## Future Enhancements
+# The following sections will be expanded as the content library grows:
+
+# Pillar Articles
+# List of core GEO articles that serve as authoritative sources:
+# - /blog/what-is-generative-ai-engine-optimization-geo
+# - /blog/semantic-html-for-ai-crawlers
+# - /blog/structured-data-for-ai-discoverability
+# (Additional pillar URLs will be added here)
+
+# Entity Index
+# Key entities and concepts covered:
+# - Generative Engine Optimization (GEO)
+# - Answer Engine Optimization (AEO)
+# - Structured Data / Schema.org
+# - Semantic HTML
+# - AI Content Automation
+# (Additional entities will be added here)
+
+# API Endpoints
+# Machine-readable endpoints for structured data access:
+# - ${SITE_URL}/api/schema-snippets - JSON-LD template library
+# - ${SITE_URL}/api/views/[slug] - View statistics
+# - ${SITE_URL}/api/analytics/views - Aggregated analytics
+# (Additional endpoints will be documented here)
 `;
 
   return new NextResponse(llmTxtContent, {

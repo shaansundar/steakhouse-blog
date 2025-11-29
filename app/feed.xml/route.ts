@@ -8,7 +8,8 @@
 import { NextResponse } from "next/server";
 import { getAllPosts, getAuthorName } from "@/lib/posts";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
+// Use canonical blog domain
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://blog.trysteakhouse.com";
 const SITE_NAME = "SteakHouse Blog";
 
 export async function GET() {

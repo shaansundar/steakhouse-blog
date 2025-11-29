@@ -35,7 +35,8 @@ import {
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://trysteakhouse.com";
+// Use canonical blog domain
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://blog.trysteakhouse.com";
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
@@ -286,6 +287,16 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                   <p className="text-lg lg:text-xl text-muted-foreground mb-6 leading-relaxed">
                     {post.description}
                   </p>
+
+              {/* Tl;Dr Snippet - Direct answer for AI systems */}
+              {post.tldr && (
+                <section className="mt-4 mb-6 border-l-4 border-primary/30 pl-4 py-2 bg-muted/20 rounded-r-md">
+                  <p className="text-sm md:text-base leading-relaxed">
+                    <strong className="text-foreground">Tl;Dr:</strong>{' '}
+                    <span className="text-muted-foreground">{post.tldr}</span>
+                  </p>
+                </section>
+              )}
 
               {/* Rating Display - Prominently displayed */}
               {ratingStats && ratingStats.total_ratings > 0 && (
