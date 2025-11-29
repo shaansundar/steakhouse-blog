@@ -47,7 +47,7 @@ export interface TopicCluster {
   id: TopicClusterId;
   name: string;
   description: string;
-  slug: string[];
+  slug: readonly string[];
 }
 
 export const TOPIC_CLUSTERS: Record<TopicClusterId, TopicCluster> = {
@@ -89,7 +89,7 @@ export function getAllTopicIds(): TopicClusterId[] {
  */
 export function getPostsForTopic(topicId: TopicClusterId, allPosts: Array<{ slug: string }>): Array<{ slug: string }> {
   const cluster = TOPIC_CLUSTERS[topicId];
-  return allPosts.filter(post => cluster.slug.includes(post.slug));
+  return allPosts.filter(post => (cluster.slug as readonly string[]).includes(post.slug));
 }
 
 /**
