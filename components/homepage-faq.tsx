@@ -7,10 +7,21 @@ import { HelpCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { homepageFAQData } from "@/lib/homepage-faq-data";
 
 export function HomepageFAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  // Initialize with all FAQs open by default
+  const [openIndexes, setOpenIndexes] = useState<Set<number>>(
+    new Set(homepageFAQData.map((_, index) => index))
+  );
 
   const toggleFAQ = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
+    setOpenIndexes((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
   };
 
   return (
@@ -28,19 +39,19 @@ export function HomepageFAQ() {
               <button
                 onClick={() => toggleFAQ(index)}
                 className="w-full text-left py-3 flex items-start justify-between gap-4 hover:bg-muted/50 rounded-md px-2 -mx-2 transition-colors group"
-                aria-expanded={openIndex === index}
+                aria-expanded={openIndexes.has(index)}
                 aria-controls={`faq-answer-${index}`}
               >
                 <h3 className="font-medium text-sm group-hover:text-primary transition-colors flex-1">
                   {faq.question}
                 </h3>
-                {openIndex === index ? (
+                {openIndexes.has(index) ? (
                   <ChevronUp className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                 ) : (
                   <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
                 )}
               </button>
-              {openIndex === index && (
+              {openIndexes.has(index) && (
                 <div
                   id={`faq-answer-${index}`}
                   className="px-2 pb-3 text-sm text-muted-foreground leading-relaxed"

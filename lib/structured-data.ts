@@ -64,11 +64,27 @@ export function generateWebsiteSchema() {
 }
 
 /**
+ * Convert reading time string (e.g., "7 min read") to ISO 8601 duration (e.g., "PT7M")
+ */
+function convertReadingTimeToISO8601(readingTime: string): string {
+  // Extract number from reading time string (e.g., "7 min read" -> 7)
+  const match = readingTime.match(/(\d+)/);
+  if (match) {
+    const minutes = parseInt(match[1], 10);
+    return `PT${minutes}M`;
+  }
+  // Default to 5 minutes if parsing fails
+  return 'PT5M';
+}
+
+/**
  * BlogPosting schema for individual blog posts
  * Follows Schema.org best practices: https://schema.org/BlogPosting
+ * Uses @id references for better entity linking
  */
 export function generateBlogPostingSchema(post: PostMeta, articleBody?: string) {
   const postUrl = `${SITE_URL}/blog/${post.slug}`;
+  const articleId = `${postUrl}#article`;
   
   // Normalize author to string
   const authorName = typeof post.author === 'string' ? post.author : post.author.name;
@@ -83,25 +99,31 @@ export function generateBlogPostingSchema(post: PostMeta, articleBody?: string) 
     authorSchema.url = authorUrl;
   }
   
-  // Calculate word count if articleBody is provided
-  const wordCount = articleBody 
-    ? articleBody.split(/\s+/).filter(word => word.length > 0).length 
-    : undefined;
+  // Convert reading time to ISO 8601 duration format
+  const timeRequired = convertReadingTimeToISO8601(post.readingTime);
   
-  // Build schema following Schema.org recommendations
+  // Determine article section from topics or tags
+  const articleSection = post.topics && post.topics.length > 0 
+    ? post.topics[0].charAt(0).toUpperCase() + post.topics[0].slice(1).replace(/-/g, ' ')
+    : post.tags[0] || 'Technology';
+  
+  // Build image URL - use ogImage if available, otherwise default
+  const imageUrl = post.ogImage 
+    ? (post.ogImage.startsWith('http') ? post.ogImage : `${SITE_URL}${post.ogImage}`)
+    : `${SITE_URL}/og/${post.slug}.png`; // Try slug-based OG image first, fallback handled below
+  
+  // Build schema with @id references for entity linking
   const schema: any = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
+    '@id': articleId,
     headline: post.title,
     description: post.description,
+    keywords: post.tags,
+    articleSection: articleSection,
     author: authorSchema,
     publisher: {
-      '@type': 'Organization',
-      name: 'SteakHouse by NimbusHQ',
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_URL}/og-default.png`,
-      },
+      '@id': 'https://trysteakhouse.com/#organization',
     },
     datePublished: post.publishedAt,
     dateModified: post.updatedAt || post.publishedAt,
@@ -109,18 +131,24 @@ export function generateBlogPostingSchema(post: PostMeta, articleBody?: string) 
       '@type': 'WebPage',
       '@id': postUrl,
     },
-    url: postUrl,
-    image: post.ogImage ? {
-      '@type': 'ImageObject',
-      url: post.ogImage.startsWith('http') ? post.ogImage : `${SITE_URL}${post.ogImage}`,
-    } : {
-      '@type': 'ImageObject',
-      url: `${SITE_URL}/og-default.png`,
+    isPartOf: {
+      '@id': `${SITE_URL}/#website`,
     },
-    keywords: post.tags.join(', '),
-    articleSection: post.tags[0] || 'Technology',
-    inLanguage: 'en-US',
+    image: [imageUrl], // Array format as requested
+    timeRequired: timeRequired,
+    inLanguage: 'en',
+    url: postUrl,
   };
+  
+  // Add alternativeHeadline if tldr exists (can be used as subtitle/pitch)
+  if (post.tldr) {
+    schema.alternativeHeadline = post.tldr;
+  }
+  
+  // Calculate word count if articleBody is provided
+  const wordCount = articleBody 
+    ? articleBody.split(/\s+/).filter(word => word.length > 0).length 
+    : undefined;
   
   // Add wordCount if available
   if (wordCount) {
@@ -145,9 +173,6 @@ export function generateBlogPostingSchema(post: PostMeta, articleBody?: string) 
     schema.genre = post.tags;
   }
   
-  // Ensure dates are in ISO 8601 format (already handled by normalizeDate)
-  // Schema.org requires ISO 8601 format
-  
   return schema;
 }
 
@@ -170,11 +195,15 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
 /**
  * FAQPage schema for FAQ sections
  * Follows Schema.org best practices: https://schema.org/FAQPage
+ * Includes @id reference for entity linking
  */
-export function generateFAQSchema(faqs: { question: string; answer: string }[]) {
+export function generateFAQSchema(faqs: { question: string; answer: string }[], slug: string) {
+  const faqId = `${SITE_URL}/blog/${slug}#faq`;
+  
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
+    '@id': faqId,
     mainEntity: faqs.map((faq) => {
       // Clean answer text (remove markdown formatting if present)
       const cleanAnswer = faq.answer

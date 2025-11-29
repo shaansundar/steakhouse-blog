@@ -208,7 +208,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   ]);
   
   // Generate FAQ schema if FAQs exist
-  const faqSchema = faqs.length > 0 ? generateFAQSchema(faqs) : null;
+  const faqSchema = faqs.length > 0 ? generateFAQSchema(faqs, post.slug) : null;
   
   // Combine all schemas
   const structuredDataSchemas = [

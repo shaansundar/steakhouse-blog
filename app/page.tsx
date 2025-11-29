@@ -7,7 +7,6 @@ import {
   generateWebsiteSchema,
   generateOrganizationSchema,
   generateBlogListSchema,
-  generateFAQSchema,
   renderJsonLd,
 } from "@/lib/structured-data";
 
@@ -42,12 +41,20 @@ export default function HomePage() {
   const blogListSchema = generateBlogListSchema(posts);
   
   // Generate FAQ schema for homepage SEO/GEO
-  const faqSchema = generateFAQSchema(
-    homepageFAQData.map(faq => ({
-      question: faq.question,
-      answer: faq.answer,
-    }))
-  );
+  // Homepage FAQs don't need a slug-based @id, use a generic one
+  const homepageFaqSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${SITE_URL}/#faq`,
+    mainEntity: homepageFAQData.map((faq) => ({
+      '@type': 'Question',
+      name: faq.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faq.answer,
+      },
+    })),
+  };
 
   return (
     <>
@@ -55,7 +62,7 @@ export default function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
-          __html: renderJsonLd([websiteSchema, organizationSchema, blogListSchema, faqSchema]),
+          __html: renderJsonLd([websiteSchema, organizationSchema, blogListSchema, homepageFaqSchema]),
         }}
       />
 

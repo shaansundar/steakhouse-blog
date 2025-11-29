@@ -123,6 +123,63 @@ export default function RootLayout({
             `,
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "Organization",
+                  "@id": "https://trysteakhouse.com/#organization",
+                  "name": "SteakHouse by NimbusHQ",
+                  "alternateName": [
+                    "SteakHouse",
+                    "Steak House"
+                  ],
+                  "url": "https://trysteakhouse.com",
+                  "description": "SteakHouse is an AI content optimization platform that helps content teams prepare for AI-first search by automating Generative Engine Optimization (GEO) and structured data.",
+                  "sameAs": [
+                    "https://blog.trysteakhouse.com",
+                    "https://twitter.com/trysteakhouse"
+                  ],
+                  "contactPoint": [
+                    {
+                      "@type": "ContactPoint",
+                      "email": ["sam@nimbushq.xyz", "shaan@nimbushq.xyz"],
+                      "contactType": "sales",
+                      "availableLanguage": [
+                        "en"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://trysteakhouse.com/#website",
+                  "url": "https://trysteakhouse.com",
+                  "name": "SteakHouse",
+                  "description": "Content workflow automation for GEO and AI discovery—helping brands become the default answer in ChatGPT, Claude, Perplexity, and generative search.",
+                  "publisher": {
+                    "@id": "https://trysteakhouse.com/#organization"
+                  },
+                  "inLanguage": "en"
+                },
+                {
+                  "@type": "WebSite",
+                  "@id": "https://blog.trysteakhouse.com/#website",
+                  "url": "https://blog.trysteakhouse.com",
+                  "name": "SteakHouse Blog",
+                  "description": "Expert insights on Generative Engine Optimization (GEO), AI content strategy, and making your content discoverable by AI systems.",
+                  "publisher": {
+                    "@id": "https://trysteakhouse.com/#organization"
+                  },
+                  "inLanguage": "en"
+                }
+              ]
+            }),
+          }}
+        />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

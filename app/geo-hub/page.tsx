@@ -5,6 +5,7 @@ import { TOPIC_CLUSTERS, TopicClusterId } from "@/lib/content/topics";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, BookOpen, Code, Workflow, TrendingUp } from "lucide-react";
+import { renderJsonLd } from "@/lib/structured-data";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://blog.trysteakhouse.com";
 
@@ -32,8 +33,33 @@ const topicIcons: Record<TopicClusterId, typeof BookOpen> = {
 export default function GeoHubPage() {
   const allPosts = getAllPosts();
 
+  // Generate WebPage schema for GEO Hub
+  const geoHubSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    '@id': `${SITE_URL}/geo-hub/#webpage`,
+    url: `${SITE_URL}/geo-hub`,
+    name: 'GEO Knowledge Hub',
+    description: 'Central hub for GEO fundamentals, implementation guides, content workflows, and advanced AI search strategies from SteakHouse.',
+    isPartOf: {
+      '@id': `${SITE_URL}/#website`,
+    },
+    publisher: {
+      '@id': 'https://trysteakhouse.com/#organization',
+    },
+    inLanguage: 'en',
+  };
+
   return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: renderJsonLd(geoHubSchema),
+        }}
+      />
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
       {/* Header */}
       <header className="mb-12">
         <h1 className="text-4xl lg:text-5xl font-bold tracking-tight mb-4">
@@ -110,7 +136,8 @@ export default function GeoHubPage() {
           Learn more about SteakHouse <ArrowRight className="h-4 w-4" />
         </Link>
       </section>
-    </div>
+      </div>
+    </>
   );
 }
 
