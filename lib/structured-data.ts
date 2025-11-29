@@ -13,16 +13,22 @@ const SITE_DESCRIPTION = 'Master GEO, AEO, and AI-driven content optimization wi
 
 /**
  * Organization schema for SteakHouse
+ * Includes @id for entity linking
  */
 export function generateOrganizationSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'Organization',
+    '@id': 'https://trysteakhouse.com/#organization',
     name: 'SteakHouse by NimbusHQ',
     url: 'https://trysteakhouse.com', // Main product URL
-    logo: `${SITE_URL}/og-default.png`,
+    logo: {
+      '@type': 'ImageObject',
+      url: `${SITE_URL}/og-default.png`,
+    },
     description: SITE_DESCRIPTION,
     sameAs: [
+      'https://blog.trysteakhouse.com',
       'https://twitter.com/trysteakhouse',
       'https://github.com/nimbushq',
     ],
@@ -30,28 +36,27 @@ export function generateOrganizationSchema() {
       '@type': 'ContactPoint',
       email: 'shaan@nimbushq.xyz',
       contactType: 'customer support',
+      availableLanguage: ['en'],
     },
   };
 }
 
 /**
  * WebSite schema with search action
+ * Includes @id for entity linking
  */
 export function generateWebsiteSchema() {
   return {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
+    '@id': `${SITE_URL}/#website`,
     name: SITE_NAME,
     url: SITE_URL,
     description: SITE_DESCRIPTION,
     publisher: {
-      '@type': 'Organization',
-      name: 'SteakHouse by NimbusHQ',
-      logo: {
-        '@type': 'ImageObject',
-        url: `${SITE_URL}/og-default.png`,
-      },
+      '@id': 'https://trysteakhouse.com/#organization',
     },
+    inLanguage: 'en',
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -199,11 +204,13 @@ export function generateBreadcrumbSchema(items: { name: string; url: string }[])
  */
 export function generateFAQSchema(faqs: { question: string; answer: string }[], slug: string) {
   const faqId = `${SITE_URL}/blog/${slug}#faq`;
+  const faqUrl = `${SITE_URL}/blog/${slug}`;
   
   return {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': faqId,
+    url: faqUrl,
     mainEntity: faqs.map((faq) => {
       // Clean answer text (remove markdown formatting if present)
       const cleanAnswer = faq.answer
@@ -227,16 +234,26 @@ export function generateFAQSchema(faqs: { question: string; answer: string }[], 
 
 /**
  * ItemList schema for blog listing
+ * Follows Schema.org ItemList requirements
  */
 export function generateBlogListSchema(posts: PostMeta[]) {
+  const items = posts.slice(0, 10);
+  
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
-    itemListElement: posts.slice(0, 10).map((post, index) => ({
+    numberOfItems: items.length,
+    itemListElement: items.map((post, index) => ({
       '@type': 'ListItem',
       position: index + 1,
-      url: `${SITE_URL}/blog/${post.slug}`,
-      name: post.title,
+      item: {
+        '@type': 'BlogPosting',
+        '@id': `${SITE_URL}/blog/${post.slug}#article`,
+        url: `${SITE_URL}/blog/${post.slug}`,
+        name: post.title,
+        headline: post.title,
+        description: post.description,
+      },
     })),
   };
 }

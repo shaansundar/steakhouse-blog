@@ -46,6 +46,7 @@ export default function HomePage() {
     '@context': 'https://schema.org',
     '@type': 'FAQPage',
     '@id': `${SITE_URL}/#faq`,
+    url: SITE_URL,
     mainEntity: homepageFAQData.map((faq) => ({
       '@type': 'Question',
       name: faq.question,
