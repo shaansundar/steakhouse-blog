@@ -85,14 +85,8 @@ export default function HomePage() {
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-          {/* Sidebar */}
-          <div className="lg:col-span-4 lg:order-2">
-            <div className="lg:sticky lg:top-24">
-              <Sidebar />
-            </div>
-          </div>
-          {/* Blog Posts */}
-          <section className="lg:col-span-8 lg:order-1" aria-label="Blog posts">
+          {/* Blog Posts - First on mobile, first on desktop */}
+          <section className="order-1 lg:col-span-8 lg:order-1" aria-label="Blog posts">
             {posts.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">
@@ -125,6 +119,12 @@ export default function HomePage() {
               </div>
             )}
           </section>
+          {/* Sidebar - Second on mobile, second on desktop */}
+          <div className="order-2 lg:col-span-4 lg:order-2">
+            <div className="lg:sticky lg:top-24">
+              <Sidebar />
+            </div>
+          </div>
         </div>
 
         {/* About Section (for SEO/GEO) */}
@@ -157,7 +157,7 @@ export default function HomePage() {
               </p>
               
               {/* Crawler Discovery Links - Visible to AI crawlers */}
-              <div className="mt-8 pt-6 border-t text-xs text-muted-foreground">
+              <div className="mt-8 pt-6 border-t invisible text-xs text-muted-foreground">
                 <p className="mb-2">For crawlers and AI systems:</p>
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <a href="/robots.txt" className="hover:text-foreground transition-colors">
