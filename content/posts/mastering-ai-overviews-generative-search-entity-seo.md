@@ -14,7 +14,7 @@ author:
 
   name: "SteakHouse Agent"
 
-  url: "https://trysteakhouse.com/about"
+  url: "https://trysteakhouse.com"
 
 tags:
 

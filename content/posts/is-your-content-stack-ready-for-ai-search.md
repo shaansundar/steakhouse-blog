@@ -6,15 +6,15 @@ description: "The rise of AI search engines like Perplexity and Google's SGE is 
 
 slug: "is-your-content-stack-ready-for-ai-search"
 
-publishedAt: "2023-10-27"
+publishedAt: "2023-10-29"
 
-updatedAt: "2023-10-27"
+updatedAt: "2023-10-29"
 
 author:
 
-  name: "Alex Chen"
+  name: "Shaan Sundar"
 
-  url: "https://example.com/authors/alex-chen"
+  url: "https://twitter.com/0xNotthatsundar"
 
 tags:
 
