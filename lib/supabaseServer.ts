@@ -2,9 +2,19 @@
  * Supabase Server Client
  * 
  * Provides server-side Supabase client for analytics and data operations.
- * Uses service role key for server-only operations.
  * 
- * IMPORTANT: Never expose SUPABASE_SERVICE_ROLE_KEY to the client.
+ * UPDATED FOR NEW SUPABASE API KEY SYSTEM (November 2025+)
+ * See: https://github.com/orgs/supabase/discussions/29260
+ * 
+ * Key Changes:
+ * - Legacy keys: `anon` and `service_role` (JWT-based)
+ * - New keys: `sb_publishable_...` and `sb_secret_...`
+ * 
+ * This module supports both legacy and new environment variable names:
+ * - New: SUPABASE_SECRET_KEY (sb_secret_... format)
+ * - Legacy: SUPABASE_SERVICE_ROLE_KEY (still supported for backwards compatibility)
+ * 
+ * IMPORTANT: Never expose secret keys to the client.
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -39,33 +49,119 @@ export interface RatingStats {
   }[];
 }
 
-// Environment variables
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+/**
+ * Get the Supabase URL from environment
+ */
+function getSupabaseUrl(): string | undefined {
+  return process.env.SUPABASE_URL;
+}
+
+/**
+ * Get the Supabase secret key from environment
+ * Supports both new (SUPABASE_SECRET_KEY) and legacy (SUPABASE_SERVICE_ROLE_KEY) naming
+ * Prefers the new key name if both are set
+ */
+function getSupabaseSecretKey(): string | undefined {
+  // Prefer new key name, fall back to legacy
+  return process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+}
+
+/**
+ * Validate that a key is in the new format (sb_secret_ prefix)
+ * Returns true if valid, false if using legacy format (for logging purposes)
+ */
+function isNewKeyFormat(key: string): boolean {
+  return key.startsWith('sb_secret_');
+}
 
 // Singleton client instance
 let supabaseClient: SupabaseClient | null = null;
 
+// Track if we've logged the legacy warning (using global to persist across hot reloads)
+declare global {
+  // eslint-disable-next-line no-var
+  var __supabaseLegacyWarningLogged: boolean | undefined;
+}
+
+// Use global to persist across Next.js hot reloads
+const hasLoggedLegacyWarning = () => {
+  if (typeof globalThis !== 'undefined') {
+    return globalThis.__supabaseLegacyWarningLogged === true;
+  }
+  return false;
+};
+
+const setLegacyWarningLogged = () => {
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__supabaseLegacyWarningLogged = true;
+  }
+};
+
 /**
  * Get Supabase server client
  * Returns null if credentials are not configured
+ * 
+ * The client is configured with:
+ * - No auto token refresh (server-side doesn't need it)
+ * - No session persistence (stateless server operations)
+ * - Global schema for consistent query behavior
  */
 export function getSupabaseServerClient(): SupabaseClient | null {
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
+  const supabaseUrl = getSupabaseUrl();
+  const supabaseSecretKey = getSupabaseSecretKey();
+
+  if (!supabaseUrl || !supabaseSecretKey) {
     console.warn('Supabase credentials not configured. View tracking disabled.');
+    console.warn('Set SUPABASE_URL and SUPABASE_SECRET_KEY (or SUPABASE_SERVICE_ROLE_KEY) in your environment.');
     return null;
   }
 
+  // Log warning if using legacy key format (only once per process)
+  // Can be suppressed with SUPPRESS_SUPABASE_LEGACY_WARNING=true
+  if (
+    !process.env.SUPPRESS_SUPABASE_LEGACY_WARNING &&
+    !hasLoggedLegacyWarning() &&
+    !isNewKeyFormat(supabaseSecretKey)
+  ) {
+    console.warn(
+      '[Supabase] Using legacy API key format. ' +
+      'Consider migrating to new API keys (sb_secret_...) before late 2026. ' +
+      'See: https://github.com/orgs/supabase/discussions/29260\n' +
+      'To suppress this warning, set SUPPRESS_SUPABASE_LEGACY_WARNING=true'
+    );
+    setLegacyWarningLogged();
+  }
+
   if (!supabaseClient) {
-    supabaseClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    supabaseClient = createClient(supabaseUrl, supabaseSecretKey, {
       auth: {
         autoRefreshToken: false,
         persistSession: false,
+      },
+      // Ensure we use the public schema by default
+      db: {
+        schema: 'public',
+      },
+      // Global headers for all requests
+      global: {
+        headers: {
+          'x-client-info': 'steakhouse-blog-server',
+        },
       },
     });
   }
 
   return supabaseClient;
+}
+
+/**
+ * Reset the Supabase client (useful for testing or credential rotation)
+ */
+export function resetSupabaseClient(): void {
+  supabaseClient = null;
+  if (typeof globalThis !== 'undefined') {
+    globalThis.__supabaseLegacyWarningLogged = false;
+  }
 }
 
 /**
@@ -82,7 +178,6 @@ export async function incrementPageView({
   const supabase = getSupabaseServerClient();
   
   if (!supabase) {
-    // Supabase not configured, skip tracking
     return;
   }
 
@@ -167,7 +262,6 @@ export async function getPageViews(slug: string): Promise<number> {
       .single();
 
     if (error) {
-      // PGRST205 = table not found
       if (error.code === 'PGRST205') {
         console.warn('page_views table not found. Please run the migration SQL in Supabase.');
       }
@@ -198,7 +292,6 @@ export async function getCrawlerViews(slug: string): Promise<number> {
       .single();
 
     if (error) {
-      // PGRST205 = table not found
       if (error.code === 'PGRST205') {
         console.warn('page_views table not found. Please run the migration SQL in Supabase.');
       }
@@ -233,7 +326,6 @@ export async function getPageViewStats(slug: string): Promise<{
       .single();
 
     if (error) {
-      // PGRST205 = table not found
       if (error.code === 'PGRST205') {
         console.warn('page_views table not found. Please run the migration SQL in Supabase.');
       }
@@ -268,7 +360,6 @@ export async function getPageViewsBatch(slugs: string[]): Promise<Record<string,
       .in('slug', slugs);
 
     if (error) {
-      // PGRST205 = table not found
       if (error.code === 'PGRST205') {
         console.warn('page_views table not found. Please run the migration SQL in Supabase.');
       } else {
@@ -312,7 +403,6 @@ export async function getAllPageViews(): Promise<PageView[]> {
       .order('views', { ascending: false });
 
     if (error) {
-      // PGRST205 = table not found
       if (error.code === 'PGRST205') {
         console.warn('page_views table not found. Please run the migration SQL in Supabase.');
       } else {
@@ -325,58 +415,6 @@ export async function getAllPageViews(): Promise<PageView[]> {
   } catch {
     return [];
   }
-}
-
-/*
- * ============================================
- * SUPABASE TABLE SCHEMA
- * ============================================
- * 
- * Run this SQL in your Supabase SQL editor to create the page_views table:
- * 
- * CREATE TABLE IF NOT EXISTS page_views (
- *   id BIGSERIAL PRIMARY KEY,
- *   slug TEXT UNIQUE NOT NULL,
- *   views BIGINT DEFAULT 0,
- *   crawlers_viewed BIGINT DEFAULT 0,
- *   last_viewed_at TIMESTAMPTZ DEFAULT NOW(),
- *   created_at TIMESTAMPTZ DEFAULT NOW()
- * );
- * 
- * -- Create index for faster slug lookups
- * CREATE INDEX IF NOT EXISTS idx_page_views_slug ON page_views(slug);
- * 
- * -- Optional: Enable Row Level Security (RLS)
- * ALTER TABLE page_views ENABLE ROW LEVEL SECURITY;
- * 
- * -- Policy to allow service role full access
- * CREATE POLICY "Service role has full access" ON page_views
- *   FOR ALL
- *   TO service_role
- *   USING (true)
- *   WITH CHECK (true);
- * 
- */
-
-// Type for article rating record
-export interface ArticleRating {
-  id: number;
-  slug: string;
-  rating: number;
-  user_ip?: string;
-  user_agent?: string;
-  created_at: string;
-  updated_at: string;
-}
-
-// Type for rating statistics
-export interface RatingStats {
-  average_rating: number;
-  total_ratings: number;
-  rating_distribution: {
-    rating: number;
-    count: number;
-  }[];
 }
 
 /**
@@ -405,9 +443,8 @@ export async function submitRating({
   }
 
   try {
-    // Try to insert or update rating
-    // If user_ip is provided, use upsert to prevent duplicates
-    const ratingData: any = {
+    // Prepare rating data
+    const ratingData: Record<string, unknown> = {
       slug,
       rating,
     };
@@ -470,7 +507,6 @@ export async function getRatingStats(slug: string): Promise<RatingStats | null> 
       .eq('slug', slug);
 
     if (error) {
-      // PGRST205 = table not found
       if (error.code === 'PGRST205') {
         console.warn('article_ratings table not found. Please run the migration SQL in Supabase.');
       } else {
@@ -555,4 +591,3 @@ export async function hasUserRated(slug: string, userIp?: string): Promise<boole
     return false;
   }
 }
-

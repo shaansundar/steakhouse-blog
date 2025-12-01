@@ -60,7 +60,10 @@ A **production-ready Medium-style blog platform** built with Next.js 16, TypeScr
    ```env
    NEXT_PUBLIC_SITE_URL=http://localhost:3000
    SUPABASE_URL=your-supabase-url
-   SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+   # Use new key format (recommended):
+   SUPABASE_SECRET_KEY=sb_secret_...  
+   # Or legacy key format (still supported):
+   # SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    LOOPS_API_KEY=your-loops-api-key  # Optional, for newsletter subscriptions
    ```
 
@@ -153,6 +156,30 @@ While SEO focuses on...
 
 ## 🗄️ Supabase Setup
 
+### New API Key System (November 2025+)
+
+Supabase has transitioned to a new API key system. See the [official announcement](https://github.com/orgs/supabase/discussions/29260) for details.
+
+**Key Changes:**
+- **Legacy keys**: `anon` and `service_role` (JWT-based)
+- **New keys**: `sb_publishable_...` and `sb_secret_...`
+
+**Migration Timeline:**
+- June 2025: New API keys introduced
+- November 2025: Migration reminders begin
+- Late 2026: Legacy keys deprecated
+
+This project supports **both** key formats. We recommend using the new keys for new projects.
+
+### API Keys
+
+Generate your API keys in the [Supabase Dashboard](https://supabase.com/dashboard) → Project Settings → API.
+
+| Key Type | New Format | Legacy Format | Purpose |
+|----------|------------|---------------|---------|
+| Secret | `sb_secret_...` | `service_role` | Server-side operations (bypasses RLS) |
+| Publishable | `sb_publishable_...` | `anon` | Client-side operations (respects RLS) |
+
 ### Create the page_views table
 
 **Important:** The view tracking feature requires a Supabase table. If you see errors about the table not existing, follow these steps:
@@ -167,34 +194,7 @@ While SEO focuses on...
    - Paste it into the SQL Editor
    - Click **Run** (or press `Cmd/Ctrl + Enter`)
 
-   Alternatively, you can run this SQL directly:
-
-```sql
--- Create page_views table for tracking
-CREATE TABLE IF NOT EXISTS public.page_views (
-  id BIGSERIAL PRIMARY KEY,
-  slug TEXT UNIQUE NOT NULL,
-  views BIGINT DEFAULT 0,
-  crawlers_viewed BIGINT DEFAULT 0,
-  last_viewed_at TIMESTAMPTZ DEFAULT NOW(),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Create indexes for faster lookups
-CREATE INDEX IF NOT EXISTS idx_page_views_slug ON public.page_views(slug);
-CREATE INDEX IF NOT EXISTS idx_page_views_views ON public.page_views(views DESC);
-CREATE INDEX IF NOT EXISTS idx_page_views_last_viewed ON public.page_views(last_viewed_at DESC);
-
--- Enable Row Level Security
-ALTER TABLE public.page_views ENABLE ROW LEVEL SECURITY;
-
--- Policy for service role (server-side)
-CREATE POLICY "Service role has full access" ON public.page_views
-  FOR ALL
-  TO service_role
-  USING (true)
-  WITH CHECK (true);
-```
+   The migration creates tables with RLS policies that work with both legacy and new API key systems.
 
 3. **Verify the table was created**
    - Check the **Table Editor** in Supabase
@@ -285,10 +285,20 @@ Add to your `.env`:
 
 ```env
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+
+# New API key format (recommended):
+SUPABASE_SECRET_KEY=sb_secret_your-key-here
+
+# Or legacy format (still supported until late 2026):
+# SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
 ```
 
-⚠️ **Never expose the service role key to the client!**
+⚠️ **Never expose secret keys to the client!**
+
+The application will:
+- Prefer `SUPABASE_SECRET_KEY` if both are set
+- Fall back to `SUPABASE_SERVICE_ROLE_KEY` for backwards compatibility
+- Log a warning if using legacy key format (as a migration reminder)
 
 ## 📁 Project Structure
 
@@ -372,7 +382,8 @@ Auto-generated at `/sitemap.xml` including:
 3. Add environment variables:
    - `NEXT_PUBLIC_SITE_URL` - Your production URL
    - `SUPABASE_URL` - Your Supabase project URL
-   - `SUPABASE_SERVICE_ROLE_KEY` - Your Supabase service role key
+   - `SUPABASE_SECRET_KEY` - Your Supabase secret key (`sb_secret_...` format, recommended)
+   - Or `SUPABASE_SERVICE_ROLE_KEY` - Legacy service role key (still supported)
    - `LOOPS_API_KEY` - Your Loops API key (optional, for newsletter)
 4. Deploy!
 
