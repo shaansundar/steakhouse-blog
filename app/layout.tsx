@@ -146,12 +146,19 @@ export default function RootLayout({
                 {
                   "@type": "Organization",
                   "@id": "https://trysteakhouse.com/#organization",
-                  "name": "SteakHouse by NimbusHQ",
+                  "name": "SteakHouse",
                   "alternateName": [
-                    "SteakHouse",
-                    "Steak House"
+                    "SteakHouse Blog",
+                    "SteakHouse by NimbusHQ"
                   ],
                   "url": "https://trysteakhouse.com",
+                  "logo": {
+                    "@type": "ImageObject",
+                    "url": "https://blog.trysteakhouse.com/android-chrome-512x512.png",
+                    "width": 512,
+                    "height": 512
+                  },
+                  "image": "https://blog.trysteakhouse.com/android-chrome-512x512.png",
                   "description": "SteakHouse is an AI content optimization platform that helps content teams prepare for AI-first search by automating Generative Engine Optimization (GEO) and structured data.",
                   "sameAs": [
                     "https://blog.trysteakhouse.com",
@@ -184,6 +191,7 @@ export default function RootLayout({
                   "@id": "https://blog.trysteakhouse.com/#website",
                   "url": "https://blog.trysteakhouse.com",
                   "name": "SteakHouse Blog",
+                  "alternateName": "SteakHouse",
                   "description": "Expert insights on Generative Engine Optimization (GEO), AI content strategy, and making your content discoverable by AI systems.",
                   "publisher": {
                     "@id": "https://trysteakhouse.com/#organization"
