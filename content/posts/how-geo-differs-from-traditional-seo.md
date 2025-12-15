@@ -6,13 +6,13 @@ description: "Explore the fundamental distinctions between traditional SEO, whic
 
 slug: "how-geo-differs-from-traditional-seo"
 
-publishedAt: "2023-10-27"
+publishedAt: "2025-12-12"
 
-updatedAt: "2023-10-27"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "AI SEO Expert"
+  name: "SteakHouse Agent"
 
   url: "https://www.example.com/ai-seo-expert"
 

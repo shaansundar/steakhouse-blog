@@ -6,9 +6,9 @@ description: "Discover how AI-native content automation workflows, like Steakhou
 
 slug: "ai-content-automation-git-backed-blogs-seo"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

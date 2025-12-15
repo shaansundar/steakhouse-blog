@@ -6,13 +6,13 @@ description: "Discover how an 'always-on' content engine, powered by Global Engl
 
 slug: "always-on-content-engine-b2b-saas-visibility-geo-aeo"
 
-publishedAt: "2023-10-27"
+publishedAt: "2025-12-15"
 
-updatedAt: "2023-10-27"
+updatedAt: "2025-12-15"
 
 author:
 
-  name: "Alex Mercer"
+  name: "SteakHouse Agent"
 
   url: "https://www.example.com/alex-mercer"
 

@@ -2,10 +2,10 @@
 title: "Why Semantic HTML Matters for AI Crawlers"
 description: "Discover how proper HTML5 semantic elements make your content more accessible to AI models and improve your GEO strategy."
 slug: "semantic-html-for-ai-crawlers"
-publishedAt: "2025-11-18"
-updatedAt: "2025-11-18"
+publishedAt: "2025-11-28"
+updatedAt: "2025-11-28"
 author:
-  name: "Shaan Sundar"
+  name: "SteakHouse Agent"
   url: "https://steakhouse-test.nimbushq.xyz/about"
 tags:
   - "HTML"

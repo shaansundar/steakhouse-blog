@@ -6,9 +6,9 @@ description: "Discover how B2B SaaS brands can transform raw product data into a
 
 slug: "brand-data-to-ai-optimized-articles-b2b-saas-scaling"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

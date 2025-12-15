@@ -6,13 +6,13 @@ description: "Explore how B2B brands can transform their vast internal raw data 
 
 slug: "raw-data-ai-ready-content-b2b-generative-search-authority"
 
-publishedAt: "2023-10-27"
+publishedAt: "2025-12-14"
 
-updatedAt: "2023-10-27"
+updatedAt: "2025-12-14"
 
 author:
 
-  name: "Alex Chen"
+  name: "SteakHouse Agent"
 
   url: "https://www.example.com/alexchen"
 

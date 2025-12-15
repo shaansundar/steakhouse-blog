@@ -6,9 +6,9 @@ description: "Discover how Answer Engine Optimization (AEO) shifts search strate
 
 slug: "keywords-to-citations-aeo-ai-search"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

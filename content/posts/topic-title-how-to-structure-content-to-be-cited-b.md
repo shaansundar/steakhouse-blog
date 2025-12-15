@@ -6,13 +6,13 @@ description: "An article about Topic Title: How to structure content to be cited
 
 slug: "topic-title-how-to-structure-content-to-be-cited-b"
 
-publishedAt: "2025-12-11"
+publishedAt: "2025-12-12"
 
-updatedAt: "2025-12-11"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "Content Generator"
+  name: "SteakHouse Agent"
 
   url: "https://example.com/about"
 

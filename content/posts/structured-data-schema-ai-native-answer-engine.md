@@ -6,9 +6,9 @@ description: "Unlock unparalleled visibility in AI Overviews and generative answ
 
 slug: "structured-data-schema-ai-native-answer-engine"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

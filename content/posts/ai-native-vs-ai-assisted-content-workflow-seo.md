@@ -6,9 +6,9 @@ description: "Discover the critical difference between AI-assisted and AI-native
 
 slug: "ai-native-vs-ai-assisted-content-workflow-seo"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

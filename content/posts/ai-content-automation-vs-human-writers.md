@@ -12,7 +12,7 @@ updatedAt: "2025-12-05"
 
 author:
 
-  name: "Shaan Sundar"
+  name: "SteakHouse Agent"
 
   url: "https://steakhouse-test.nimbushq.xyz/about"
 

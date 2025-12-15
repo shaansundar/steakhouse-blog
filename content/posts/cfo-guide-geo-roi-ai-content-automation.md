@@ -6,9 +6,9 @@ description: "Move beyond vanity metrics. This guide provides a financial framew
 
 slug: "cfo-guide-geo-roi-ai-content-automation"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

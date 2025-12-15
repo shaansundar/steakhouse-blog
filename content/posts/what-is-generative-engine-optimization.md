@@ -2,10 +2,10 @@
 title: "What is Generative AI Engine Optimization (GEO)?"
 description: "A deep dive into how to make your product discoverable by ChatGPT, Gemini, Claude, and other LLMs."
 slug: "what-is-generative-ai-engine-optimization-geo"
-publishedAt: "2025-11-20"
-updatedAt: "2025-11-20"
+publishedAt: "2025-11-28"
+updatedAt: "2025-11-28"
 author:
-  name: "Shaan Sundar"
+  name: "SteakHouse Agent"
   url: "https://steakhouse-test.nimbushq.xyz/about"
 tags:
   - "Generative AI"

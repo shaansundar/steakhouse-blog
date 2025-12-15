@@ -6,13 +6,13 @@ description: "Explore the fundamental differences between traditional SEO and Ge
 
 slug: "how-geo-differs-from-traditional-seo"
 
-publishedAt: "2023-10-27"
+publishedAt: "2025-12-12"
 
-updatedAt: "2023-10-27"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "Alex Digital"
+  name: "SteakHouse Agent"
 
   url: "https://www.example.com/alex-digital"
 

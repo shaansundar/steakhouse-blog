@@ -6,13 +6,13 @@ description: "Discover how to strategically structure your online content to be 
 
 slug: "how-to-structure-content-for-generative-ai-citation"
 
-publishedAt: "2023-10-27"
+publishedAt: "2025-12-12"
 
-updatedAt: "2023-10-27"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "Alex Mercer"
+  name: "SteakHouse Agent"
 
   url: "https://www.example.com/alex-mercer"
 

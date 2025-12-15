@@ -2,10 +2,10 @@
 title: "How Structured Data Makes Your Content AI-Discoverable"
 description: "Learn how JSON-LD and Schema.org markup help AI models understand and recommend your content effectively."
 slug: "structured-data-for-ai-discoverability"
-publishedAt: "2025-11-19"
-updatedAt: "2025-11-19"
+publishedAt: "2025-11-28"
+updatedAt: "2025-11-28"
 author:
-  name: "Shaan Sundar"
+  name: "SteakHouse Agent"
   url: "https://steakhouse-test.nimbushq.xyz/about"
 tags:
   - "Structured Data"

@@ -6,9 +6,9 @@ description: "Unlock the power of AI content clusters to build deep topical auth
 
 slug: "mastering-topical-authority-ai-content-clusters-entity-seo"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

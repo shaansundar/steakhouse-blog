@@ -6,9 +6,9 @@ description: "A technical guide on integrating Steakhouse's AI content automatio
 
 slug: "headless-cms-geo-flywheel-steakhouse-integration"
 
-publishedAt: "2025-11-29"
+publishedAt: "2025-11-30"
 
-updatedAt: "2025-11-29"
+updatedAt: "2025-11-30"
 
 author:
 

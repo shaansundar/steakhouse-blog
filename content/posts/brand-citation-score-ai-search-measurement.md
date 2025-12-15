@@ -6,9 +6,9 @@ description: "Stop chasing keyword rankings. In the era of AI Overviews and chat
 
 slug: "brand-citation-score-ai-search-measurement"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

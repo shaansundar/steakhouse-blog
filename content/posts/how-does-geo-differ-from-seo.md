@@ -6,13 +6,13 @@ description: "Explore how Generative Engine Optimization (GEO) goes beyond tradi
 
 slug: "how-does-geo-differ-from-seo"
 
-publishedAt: "2025-12-11"
+publishedAt: "2025-12-12"
 
-updatedAt: "2025-12-11"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "Steakhouse Agent"
+  name: "SteakHouse Agent"
 
   url: "https://trysteakhouse.com/about"
 

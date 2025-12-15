@@ -6,13 +6,13 @@ description: "Master on-page Generative Engine Optimization (GEO) with actionabl
 
 slug: "best-practices-for-geo"
 
-publishedAt: "2025-12-11"
+publishedAt: "2025-12-12"
 
-updatedAt: "2025-12-11"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "Steakhouse Agent"
+  name: "SteakHouse Agent"
 
   url: "https://trysteakhouse.com/about"
 

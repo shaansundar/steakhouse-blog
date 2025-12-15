@@ -6,9 +6,9 @@ description: "Learn the Content as Code playbook. Use Git and AI automation to b
 
 slug: "content-as-code-playbook-programmatic-seo"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

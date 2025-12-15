@@ -6,9 +6,9 @@ description: "Unlock AI Overviews visibility. This guide explores entity-based S
 
 slug: "mastering-ai-overviews-generative-search-entity-seo"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

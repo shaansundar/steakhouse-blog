@@ -6,13 +6,13 @@ description: "Discover strategic approaches and technical considerations for opt
 
 slug: "how-to-structure-content-for-generative-engine-citation"
 
-publishedAt: "2023-10-27"
+publishedAt: "2025-12-12"
 
-updatedAt: "2023-10-27"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "AI Content Strategist"
+  name: "SteakHouse Agent"
 
   url: "https://www.example.com/aics"
 

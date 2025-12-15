@@ -6,13 +6,13 @@ description: "An article about Topic Title: Best on-page practices for Generativ
 
 slug: "topic-title-best-on-page-practices-for-generative-"
 
-publishedAt: "2025-12-11"
+publishedAt: "2025-12-12"
 
-updatedAt: "2025-12-11"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "Content Generator"
+  name: "SteakHouse Agent"
 
   url: "https://example.com/about"
 

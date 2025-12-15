@@ -12,7 +12,7 @@ updatedAt: "2025-12-13"
 
 author:
 
-  name: "Steakhouse Agent"
+  name: "SteakHouse Agent"
 
   url: "https://trysteakhouse.com/about"
 

@@ -6,9 +6,9 @@ description: "A tactical guide for technical marketers on using an AI-native pla
 
 slug: "api-docs-to-content-moat-ai-workflow"
 
-publishedAt: "2025-11-28"
+publishedAt: "2025-11-29"
 
-updatedAt: "2025-11-28"
+updatedAt: "2025-11-29"
 
 author:
 

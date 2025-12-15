@@ -6,9 +6,9 @@ description: "Tired of generic AI content diluting your brand? Discover how a Gi
 
 slug: "escape-ai-sameness-trap-git-workflow"
 
-publishedAt: "2025-11-29"
+publishedAt: "2025-11-30"
 
-updatedAt: "2025-11-29"
+updatedAt: "2025-11-30"
 
 author:
 

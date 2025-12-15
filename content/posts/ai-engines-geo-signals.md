@@ -6,13 +6,13 @@ description: "Explore how various AI engines, from localized search and autonomo
 
 slug: "ai-engines-geo-signals"
 
-publishedAt: "2023-10-27"
+publishedAt: "2025-12-12"
 
-updatedAt: "2023-10-27"
+updatedAt: "2025-12-12"
 
 author:
 
-  name: "Alex GeoTech"
+  name: "SteakHouse Agent"
 
   url: "https://www.example.com/alexgeotech"
 
