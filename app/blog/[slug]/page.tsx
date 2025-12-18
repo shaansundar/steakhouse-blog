@@ -145,8 +145,9 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
   const crawlerInfo = detectCrawler(userAgent);
 
   // Track page view server-side (non-blocking for faster LCP)
-  // Fire and forget - don't await to avoid blocking render
-  incrementPageView({
+  // IMPORTANT: In Next.js App Router, un-awaited promises can be interrupted when the request finishes.
+  // We start this work early and await it later in parallel with other async work.
+  const incrementPromise = incrementPageView({
     slug: post.slug,
     isCrawler: crawlerInfo.isCrawler,
   }).catch((err) => {
@@ -217,9 +218,13 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
     ...(faqSchema ? [faqSchema] : []),
   ];
 
-      // Await view stats and rating stats (non-blocking promises)
-      const viewStats = await viewStatsPromise;
-      const ratingStats = await ratingStatsPromise;
+  // Await view stats, rating stats, and view increment in parallel.
+  // (We still read the resolved values from the already-running promises.)
+  const [viewStats, ratingStats] = (await Promise.all([
+    viewStatsPromise,
+    ratingStatsPromise,
+    incrementPromise,
+  ])) as [Awaited<typeof viewStatsPromise>, Awaited<typeof ratingStatsPromise>, void];
 
   return (
     <>
